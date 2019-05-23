@@ -22,24 +22,33 @@ class AdminUserProvisionController extends Controller
     {
         $filter = $request->get('filter');
 
-        if ($filter && preg_match('/userName eq (.*)/i', $filter, $matches)) {
-            $users = User::where('email', $matches[1])->get();
-        } else {
-            $users = User::all('email');
-        }
+Log::debug('============Request index start=============');
+Log::debug(var_dump($request->all()));
+Log::debug('============Request index end=============');
 
-        $users = $users->map(function ($user) {
-            return ['userName' => $user->email];
-        });
+//        if ($filter && preg_match('/userName eq (.*)/i', $filter, $matches)) {
+//            $users = User::where('email', $matches[1])->get();
+//        } else {
+//            $users = User::all('email');
+//        }
+
+//        $users = $users->map(function ($user) {
+//            return ['userName' => $user->email];
+//        });
 
         $return = [
             'schemas' => ['urn:ietf:params:scim:api:messages:2.0:ListResponse'],
-            'totalResults' => $users->count(),
+//            'totalResults' => $users->count(),
         ];
 
-        if ($users->count()) {
-            $return['Resources'] = $users;
-        }
+//        if ($users->count()) {
+//            $return['Resources'] = $users;
+//        }
+
+Log::debug('============Response index start=============');
+Log::debug(var_dump(response()->json($return)->setStatusCode(Response::HTTP_OK)));
+Log::debug('============Response index end=============');
+
         return response()->json($return)->setStatusCode(Response::HTTP_OK);
     }
 
@@ -57,9 +66,13 @@ class AdminUserProvisionController extends Controller
     {
         $data = $request->all();
 
-        if (User::where('email', $data['userName'])->count()) {
-            return $this->updateUser($request, $data['userName']);
-        }
+Log::debug('============Request store start=============');
+Log::debug(var_dump($request->all()));
+Log::debug('============Request store end=============');
+
+//        if (User::where('email', $data['userName'])->count()) {
+//            return $this->updateUser($request, $data['userName']);
+//        }
 
         $user = User::create([
             'first_name' => $data['name']['givenName'],
@@ -69,6 +82,10 @@ class AdminUserProvisionController extends Controller
             'active' => $data['active'],
             'password' => Hash::make('password'),
         ]);
+
+Log::debug('============Response store start=============');
+Log::debug(var_dump(UserResource::make($user)->response()->setStatusCode(Response::HTTP_CREATED)));
+Log::debug('============Response store end=============');
 
         return UserResource::make($user)
             ->response()
@@ -95,7 +112,7 @@ class AdminUserProvisionController extends Controller
 
     private function updateUser($request, string $email)
     {
-        $user = User::where('email', $email)->firstOrFail();
+//        $user = User::where('email', $email)->firstOrFail();
 
         $validatedData = $request->all();
         $active = Arr::get($validatedData, 'active') ??
