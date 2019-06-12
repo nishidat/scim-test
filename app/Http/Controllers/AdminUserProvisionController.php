@@ -24,7 +24,7 @@ class AdminUserProvisionController extends Controller
         $filter = $request->get('filter');
 
 Log::debug('============Request index start=============');
-Log::debug(var_dump($request->all()));
+Log::debug($request->all());
 Log::debug('============Request index end=============');
 
 //        if ($filter && preg_match('/userName eq (.*)/i', $filter, $matches)) {
@@ -47,7 +47,7 @@ Log::debug('============Request index end=============');
 //        }
 
 Log::debug('============Response index start=============');
-Log::debug(var_dump(response()->json($return)->setStatusCode(Response::HTTP_OK)));
+Log::debug(response()->json($return)->setStatusCode(Response::HTTP_OK));
 Log::debug('============Response index end=============');
 
         return response()->json($return)->setStatusCode(Response::HTTP_OK);
@@ -68,7 +68,7 @@ Log::debug('============Response index end=============');
         $data = $request->all();
 
 Log::debug('============Request store start=============');
-Log::debug(var_dump($request->all()));
+Log::debug($request->all());
 Log::debug('============Request store end=============');
 
 //        if (User::where('email', $data['userName'])->count()) {
@@ -85,7 +85,7 @@ Log::debug('============Request store end=============');
         ]);
 
 Log::debug('============Response store start=============');
-Log::debug(var_dump(UserResource::make($user)->response()->setStatusCode(Response::HTTP_CREATED)));
+Log::debug(UserResource::make($user)->response()->setStatusCode(Response::HTTP_CREATED));
 Log::debug('============Response store end=============');
 
         return UserResource::make($user)
@@ -162,3 +162,4 @@ Log::debug('============Response store end=============');
             ])->setStatusCode($statusCode);
     }
 }
+

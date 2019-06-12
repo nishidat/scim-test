@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 */
 
 Route::prefix('scim/v2')
+    ->middleware('client')
     ->group(function (\Illuminate\Routing\Router $router) {
         $router->get('Users', 'AdminUserProvisionController@index')
             ->name('api.user.index');
@@ -24,9 +25,9 @@ Route::prefix('scim/v2')
         $router->post('Users', 'AdminUserProvisionController@store')
             ->name('api.user.create');
 
-//        $router->put('Users/{email}', 'AdminUserProvisionController@replace')
-//            ->name('api.user.replace');
+       $router->put('Users/{email}', 'AdminUserProvisionController@replace')
+           ->name('api.user.replace');
 
-//        $router->patch('Users/{email}', 'AdminUserProvisionController@update')
-//            ->name('api.user.update');
+       $router->patch('Users/{email}', 'AdminUserProvisionController@update')
+           ->name('api.user.update');
 });
