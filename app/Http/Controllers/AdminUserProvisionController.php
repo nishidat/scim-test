@@ -85,7 +85,7 @@ class AdminUserProvisionController extends Controller
         ]);
 
       Log::debug('============Response Users POST start=============');
-      Log::debug(UserResource::make($user)->response()->setStatusCode(Response::HTTP_CREATED));
+      Log::debug('ユーザー作成');
       Log::debug('============Response Users POST end=============');
 
         return UserResource::make($user)
@@ -106,7 +106,7 @@ class AdminUserProvisionController extends Controller
         }
         
         Log::debug('============Response Users/{email} GET start=============');
-        Log::debug(UserResource::make($user)->response()->setStatusCode(Response::HTTP_OK));
+        Log::debug('ユーザー取得');
         Log::debug('============Response Users/{email} GET end=============');
 
         return UserResource::make($user)
@@ -116,6 +116,9 @@ class AdminUserProvisionController extends Controller
 
     public function update(Request $request, string $email)
     {
+      Log::debug('============Request Users/{email} PATCH start=============');
+      Log::debug($request->all());
+      Log::debug('============Request Users/{email} PATCH end=============');
         return $this->updateUser($request, $email);
     }
 
@@ -146,6 +149,10 @@ class AdminUserProvisionController extends Controller
         if ($user->isDirty()) {
             $user->save();
         }
+        
+        Log::debug('============Response Users/{email} PATCH start=============');
+        Log::debug('ユーザー更新');
+        Log::debug('============Response Users/{email} PATCH end=============');
 
         return UserResource::make($user)
             ->response()
