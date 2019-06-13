@@ -14,167 +14,175 @@ use Log;
 
 class AdminUserProvisionController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @throws \Exception
-     */
-    public function index(Request $request)
-    {
-        $filter = $request->get('filter');
-
-        Log::debug('============Request Users GET start=============');
-        Log::debug($request->all());
-        Log::debug('============Request Users GET end=============');
-
-       if ($filter && preg_match('/userName eq (.*)/i', $filter, $matches)) {
-           $users = User::where('email', $matches[1])->get();
-       } else {
-           $users = User::all('email');
-       }
-
-       $users = $users->map(function ($user) {
-           return ['userName' => $user->email];
-       });
-
-        $return = [
-            'schemas' => ['urn:ietf:params:scim:api:messages:2.0:ListResponse'],
-            'totalResults' => $users->count(),
-        ];
-
-       if ($users->count()) {
-           $return['Resources'] = $users;
-       }
-
-      Log::debug('============Response Users GET start=============');
-      Log::debug(response()->json($return)->setStatusCode(Response::HTTP_OK));
-      Log::debug('============Response Users GET end=============');
-
-        return response()->json($return)->setStatusCode(Response::HTTP_OK);
+  /**
+  * Display a listing of the resource.
+  *
+  * @throws \Exception
+  */
+  public function index(Request $request)
+  {
+    $filter = $request->get('filter');
+    
+    Log::debug('============Request Users GET start=============');
+    Log::debug($request->all());
+    Log::debug('============Request Users GET end=============');
+    
+    if ($filter && preg_match('/userName eq (.*)/i', $filter, $matches)) {
+      $users = User::where('email', $matches[1])->get();
+      Log::debug('============email start=============');
+      Log::debug($filter);
+      Log::debug($matches[1]);
+      Log::debug($users);
+      Log::debug('============email end=============');
+    } else {
+      $users = User::all('email');
+      Log::debug('============email all start=============');
+      Log::debug($users);
+      Log::debug('============email all end=============');
     }
-
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @throws \Exception
-     */
-    public function create()
-    {
-        throw new \Exception('Not implemented');
+    
+    $users = $users->map(function ($user) {
+      return ['userName' => $user->email];
+    });
+    
+    $return = [
+      'schemas' => ['urn:ietf:params:scim:api:messages:2.0:ListResponse'],
+      'totalResults' => $users->count(),
+    ];
+    
+    if ($users->count()) {
+      $return['Resources'] = $users;
     }
-
-    public function store(Request $request)
-    {
-        $data = $request->all();
-
-      Log::debug('============Request Users POST start=============');
-      Log::debug($request->all());
-      Log::debug('============Request Users POST end=============');
-
-       if (User::where('email', $data['userName'])->count()) {
-           return $this->updateUser($request, $data['userName']);
-       }
-
-        $user = User::create([
-            'first_name' => $data['name']['givenName'],
-            'last_name' => $data['name']['familyName'],
-            'username' => $data['userName'],
-            'email' => $data['userName'],
-            'active' => $data['active'],
-            'password' => Hash::make('password'),
-        ]);
-
-      Log::debug('============Response Users POST start=============');
-      Log::debug('ユーザー作成');
-      Log::debug('============Response Users POST end=============');
-
-        return UserResource::make($user)
-            ->response()
-            ->setStatusCode(Response::HTTP_CREATED);
+    
+    Log::debug('============Response Users GET start=============');
+    Log::debug(response()->json($return)->setStatusCode(Response::HTTP_OK));
+    Log::debug('============Response Users GET end=============');
+    
+    return response()->json($return)->setStatusCode(Response::HTTP_OK);
+  }
+  
+  /**
+  * Show the form for creating a new resource.
+  *
+  * @throws \Exception
+  */
+  public function create()
+  {
+    throw new \Exception('Not implemented');
+  }
+  
+  public function store(Request $request)
+  {
+    $data = $request->all();
+    
+    Log::debug('============Request Users POST start=============');
+    Log::debug($request->all());
+    Log::debug('============Request Users POST end=============');
+    
+    if (User::where('email', $data['userName'])->count()) {
+      return $this->updateUser($request, $data['userName']);
     }
-
-    public function show(Request $request, string $email)
-    {
-      Log::debug('============Request Users/{email} GET start=============');
-      Log::debug($request->all());
-      Log::debug('============Request Users/{email} GET end=============');
-      
-        try {
-            $user = User::where($email)->firstOrFail();
-        } catch (\Exception $exception) {
-            return $this->scimError('User does not exist', Response::HTTP_NOT_FOUND);
-        }
-        
-        Log::debug('============Response Users/{email} GET start=============');
-        Log::debug('ユーザー取得');
-        Log::debug('============Response Users/{email} GET end=============');
-
-        return UserResource::make($user)
-            ->response()
-            ->setStatusCode(Response::HTTP_OK);
+    
+    $user = User::create([
+      'first_name' => $data['name']['givenName'],
+      'last_name' => $data['name']['familyName'],
+      'username' => $data['userName'],
+      'email' => $data['userName'],
+      'active' => $data['active'],
+      'password' => Hash::make('password'),
+    ]);
+    
+    Log::debug('============Response Users POST start=============');
+    Log::debug('ユーザー作成');
+    Log::debug('============Response Users POST end=============');
+    
+    return UserResource::make($user)
+    ->response()
+    ->setStatusCode(Response::HTTP_CREATED);
+  }
+  
+  public function show(Request $request, string $email)
+  {
+    Log::debug('============Request Users/{email} GET start=============');
+    Log::debug($request->all());
+    Log::debug('============Request Users/{email} GET end=============');
+    
+    try {
+      $user = User::where($email)->firstOrFail();
+    } catch (\Exception $exception) {
+      return $this->scimError('User does not exist', Response::HTTP_NOT_FOUND);
     }
-
-    public function update(Request $request, string $email)
-    {
-      Log::debug('============Request Users/{email} PATCH start=============');
-      Log::debug($request->all());
-      Log::debug('============Request Users/{email} PATCH end=============');
-        return $this->updateUser($request, $email);
+    
+    Log::debug('============Response Users/{email} GET start=============');
+    Log::debug('ユーザー取得');
+    Log::debug('============Response Users/{email} GET end=============');
+    
+    return UserResource::make($user)
+    ->response()
+    ->setStatusCode(Response::HTTP_OK);
+  }
+  
+  public function update(Request $request, string $email)
+  {
+    Log::debug('============Request Users/{email} PATCH start=============');
+    Log::debug($request->all());
+    Log::debug('============Request Users/{email} PATCH end=============');
+    return $this->updateUser($request, $email);
+  }
+  
+  private function updateUser($request, string $email)
+  {
+    $user = User::where('email', $email)->firstOrFail();
+    
+    $validatedData = $request->all();
+    $active = Arr::get($validatedData, 'active') ??
+    Arr::get($validatedData, 'Operations.value.active') ??
+    null;
+    
+    // We only care about updating the user's secure access on activation,
+    // so return early if there's been no change to their active status
+    if ($active === null) {
+      return UserResource::make($user)
+      ->response()
+      ->setStatusCode(Response::HTTP_OK);
     }
-
-    private function updateUser($request, string $email)
-    {
-       $user = User::where('email', $email)->firstOrFail();
-
-        $validatedData = $request->all();
-        $active = Arr::get($validatedData, 'active') ??
-            Arr::get($validatedData, 'Operations.value.active') ??
-            null;
-
-        // We only care about updating the user's secure access on activation,
-        // so return early if there's been no change to their active status
-        if ($active === null) {
-            return UserResource::make($user)
-                ->response()
-                ->setStatusCode(Response::HTTP_OK);
-        }
-
-        $user->active = $active;
-
-        // If user is active, ensure secure access permission
-       if ($user->active && !$user->hasAccess('secure.access')) {
-           $user->updatePermission('secure.access', true, true);
-       }
-
-        if ($user->isDirty()) {
-            $user->save();
-        }
-        
-        Log::debug('============Response Users/{email} PATCH start=============');
-        Log::debug('ユーザー更新');
-        Log::debug('============Response Users/{email} PATCH end=============');
-
-        return UserResource::make($user)
-            ->response()
-            ->setStatusCode(Response::HTTP_OK);
+    
+    $user->active = $active;
+    
+    // If user is active, ensure secure access permission
+    if ($user->active && !$user->hasAccess('secure.access')) {
+      $user->updatePermission('secure.access', true, true);
     }
-
-    /**
-     * Returns a SCIM-formatted error message
-     *
-     * @param string|null $message
-     * @param int $statusCode
-     *
-     * @return JsonResponse
-     */
-    protected function scimError(?string $message, int $statusCode): JsonResponse
-    {
-        return response()
-            ->json([
-                'schemas' => ["urn:ietf:params:scim:api:messages:2.0:Error"],
-                'detail' => $message ?? 'An error occured',
-                'status' => $statusCode,
-            ])->setStatusCode($statusCode);
+    
+    if ($user->isDirty()) {
+      $user->save();
     }
-}
-
+    
+    Log::debug('============Response Users/{email} PATCH start=============');
+    Log::debug('ユーザー更新');
+    Log::debug('============Response Users/{email} PATCH end=============');
+    
+    return UserResource::make($user)
+    ->response()
+    ->setStatusCode(Response::HTTP_OK);
+  }
+  
+  /**
+  * Returns a SCIM-formatted error message
+  *
+  * @param string|null $message
+  * @param int $statusCode
+  *
+  * @return JsonResponse
+  */
+  protected function scimError(?string $message, int $statusCode): JsonResponse
+  {
+    return response()
+    ->json([
+      'schemas' => ["urn:ietf:params:scim:api:messages:2.0:Error"],
+      'detail' => $message ?? 'An error occured',
+      'status' => $statusCode,
+      ])->setStatusCode($statusCode);
+    }
+  }
+  
