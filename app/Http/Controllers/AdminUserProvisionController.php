@@ -23,32 +23,32 @@ class AdminUserProvisionController extends Controller
     {
         $filter = $request->get('filter');
 
-Log::debug('============Request index start=============');
-Log::debug($request->all());
-Log::debug('============Request index end=============');
+        Log::debug('============Request Users GET start=============');
+        Log::debug($request->all());
+        Log::debug('============Request Users GET end=============');
 
-//        if ($filter && preg_match('/userName eq (.*)/i', $filter, $matches)) {
-//            $users = User::where('email', $matches[1])->get();
-//        } else {
-//            $users = User::all('email');
-//        }
+       if ($filter && preg_match('/userName eq (.*)/i', $filter, $matches)) {
+           $users = User::where('email', $matches[1])->get();
+       } else {
+           $users = User::all('email');
+       }
 
-//        $users = $users->map(function ($user) {
-//            return ['userName' => $user->email];
-//        });
+       $users = $users->map(function ($user) {
+           return ['userName' => $user->email];
+       });
 
         $return = [
             'schemas' => ['urn:ietf:params:scim:api:messages:2.0:ListResponse'],
-//            'totalResults' => $users->count(),
+            'totalResults' => $users->count(),
         ];
 
-//        if ($users->count()) {
-//            $return['Resources'] = $users;
-//        }
+       if ($users->count()) {
+           $return['Resources'] = $users;
+       }
 
-Log::debug('============Response index start=============');
-Log::debug(response()->json($return)->setStatusCode(Response::HTTP_OK));
-Log::debug('============Response index end=============');
+      Log::debug('============Response Users GET start=============');
+      Log::debug(response()->json($return)->setStatusCode(Response::HTTP_OK));
+      Log::debug('============Response Users GET end=============');
 
         return response()->json($return)->setStatusCode(Response::HTTP_OK);
     }
@@ -67,13 +67,13 @@ Log::debug('============Response index end=============');
     {
         $data = $request->all();
 
-Log::debug('============Request store start=============');
-Log::debug($request->all());
-Log::debug('============Request store end=============');
+      Log::debug('============Request Users POST start=============');
+      Log::debug($request->all());
+      Log::debug('============Request Users POST end=============');
 
-//        if (User::where('email', $data['userName'])->count()) {
-//            return $this->updateUser($request, $data['userName']);
-//        }
+       if (User::where('email', $data['userName'])->count()) {
+           return $this->updateUser($request, $data['userName']);
+       }
 
         $user = User::create([
             'first_name' => $data['name']['givenName'],
@@ -84,9 +84,9 @@ Log::debug('============Request store end=============');
             'password' => Hash::make('password'),
         ]);
 
-Log::debug('============Response store start=============');
-Log::debug(UserResource::make($user)->response()->setStatusCode(Response::HTTP_CREATED));
-Log::debug('============Response store end=============');
+      Log::debug('============Response Users POST start=============');
+      Log::debug(UserResource::make($user)->response()->setStatusCode(Response::HTTP_CREATED));
+      Log::debug('============Response Users POST end=============');
 
         return UserResource::make($user)
             ->response()
@@ -95,11 +95,19 @@ Log::debug('============Response store end=============');
 
     public function show(Request $request, string $email)
     {
+      Log::debug('============Request Users/{email} GET start=============');
+      Log::debug($request->all());
+      Log::debug('============Request Users/{email} GET end=============');
+      
         try {
             $user = User::where($email)->firstOrFail();
         } catch (\Exception $exception) {
             return $this->scimError('User does not exist', Response::HTTP_NOT_FOUND);
         }
+        
+        Log::debug('============Response Users/{email} GET start=============');
+        Log::debug(UserResource::make($user)->response()->setStatusCode(Response::HTTP_OK));
+        Log::debug('============Response Users/{email} GET end=============');
 
         return UserResource::make($user)
             ->response()
@@ -113,7 +121,7 @@ Log::debug('============Response store end=============');
 
     private function updateUser($request, string $email)
     {
-//        $user = User::where('email', $email)->firstOrFail();
+       $user = User::where('email', $email)->firstOrFail();
 
         $validatedData = $request->all();
         $active = Arr::get($validatedData, 'active') ??
@@ -131,9 +139,9 @@ Log::debug('============Response store end=============');
         $user->active = $active;
 
         // If user is active, ensure secure access permission
-//        if ($user->active && !$user->hasAccess('secure.access')) {
-//            $user->updatePermission('secure.access', true, true);
-//        }
+       if ($user->active && !$user->hasAccess('secure.access')) {
+           $user->updatePermission('secure.access', true, true);
+       }
 
         if ($user->isDirty()) {
             $user->save();
