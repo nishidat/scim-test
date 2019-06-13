@@ -14,7 +14,6 @@ use Illuminate\Http\Request;
 */
 
 Route::prefix('scim/v2')
-    ->middleware('client')
     ->group(function (\Illuminate\Routing\Router $router) {
         $router->get('Users', 'AdminUserProvisionController@index')
             ->name('api.user.index');
