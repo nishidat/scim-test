@@ -28,7 +28,7 @@ class AdminUserProvisionController extends Controller
     Log::debug('============Request Users GET end=============');
     
     if ($filter && preg_match('/userName eq (.*)/i', $filter, $matches)) {
-      $users = User::where('email', $matches[1])->get();
+      $users = User::where('email', str_replace('"', '', $matches[1]))->get();
       Log::debug('============email start=============');
       Log::debug($filter);
       Log::debug($matches[1]);
