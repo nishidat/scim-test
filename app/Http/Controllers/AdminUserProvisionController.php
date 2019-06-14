@@ -150,9 +150,9 @@ class AdminUserProvisionController extends Controller
     $user->active = $active;
     
     // If user is active, ensure secure access permission
-    if ($user->active && !$user->hasAccess('secure.access')) {
-      $user->updatePermission('secure.access', true, true);
-    }
+    // if ($user->active && !$user->hasAccess('secure.access')) {
+    //   $user->updatePermission('secure.access', true, true);
+    // }
     
     if ($user->isDirty()) {
       $user->save();
