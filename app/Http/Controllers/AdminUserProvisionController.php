@@ -61,8 +61,8 @@ class AdminUserProvisionController extends Controller
         'userName' => $user->email,
         'name' => [
             'formatted' => $user->user_name,
-            'givenName' => $user->first_name,
-            'familyName' => $user->last_name,
+            'givenName' => $user->givenName,
+            'familyName' => $user->familyName,
         ],
         'active' => $user->active,
         'emails' => [
@@ -105,8 +105,8 @@ class AdminUserProvisionController extends Controller
     }else{
       $user = User::create([
         'external_id' => $data['externalId'],
-        'first_name' => $data['name']['givenName'],
-        'last_name' => $data['name']['familyName'],
+        'givenName' => $data['name']['givenName'],
+        'familyName' => $data['name']['familyName'],
         'username' => $data['name']['formatted'],
         'email' => $data['userName'],
         'active' => $data['active'],
@@ -219,10 +219,10 @@ class AdminUserProvisionController extends Controller
       $user->user_name = $requestData['name']['formatted'];
     } 
     if ($requestData['name']['givenName']) {
-      $user->first_name = $requestData['name']['givenName'];
+      $user->givenName = $requestData['name']['givenName'];
     } 
     if ($requestData['name']['familyName']) {
-      $user->last_name = $requestData['name']['familyName'];
+      $user->familyName = $requestData['name']['familyName'];
     } 
     if ($requestData['externalId']) {
       $user->external_id = $requestData['externalId'];
@@ -279,8 +279,8 @@ class AdminUserProvisionController extends Controller
         'userName' => $user->email,
         'name' => [
             'formatted' => $user->user_name,
-            'givenName' => $user->first_name,
-            'familyName' => $user->last_name,
+            'givenName' => $user->givenName,
+            'familyName' => $user->familyName,
         ],
         'active' => $user->active,
         'emails' => [
