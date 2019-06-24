@@ -41,21 +41,42 @@ class AdminUserProvisionController extends Controller
       Log::debug('============email all end=============');
     }
     
-    $users = $users->map(function ($user) {
-      return ['userName' => $user->email];
-    });
-    
     $return = [
       'schemas' => ['urn:ietf:params:scim:api:messages:2.0:ListResponse'],
       'totalResults' => $users->count(),
+      'startIndex' => 1,
+      'itemsPerPage' => 20
     ];
     
     if ($users->count()) {
-      $return['Resources'] = $users;
+      $return['Resources'] = [
+        'schemas' => ['urn:ietf:params:scim:schemas:core:2.0:User'],
+        'id' => $user->email,
+        'externalId' => $user->external_id,
+        'meta' => [
+            'resourceType' => 'User',
+            'created' => $user->created_at->toIso8601String(),
+            'lastModified' => $user->updated_at->toIso8601String(),
+        ],
+        'userName' => $user->email,
+        'name' => [
+            'formatted' => $user->user_name,
+            'givenName' => $user->first_name,
+            'familyName' => $user->last_name,
+        ],
+        'active' => $user->active,
+        'emails' => [
+          'value' => $user->email,
+          'type' => 'work',
+          'primary' => 'true'
+        ]
+      ];
+    }else{
+      $return['Resources'] = [];
     }
     
     Log::debug('============Response Users GET start=============');
-    Log::debug(response()->json($return)->setStatusCode(Response::HTTP_OK));
+    Log::debug($return);
     Log::debug('============Response Users GET end=============');
     
     return response()->json($return)->setStatusCode(Response::HTTP_OK);
@@ -80,25 +101,24 @@ class AdminUserProvisionController extends Controller
     Log::debug('============Request Users POST end=============');
     
     if (User::where('email', $data['userName'])->count()) {
-      return $this->updateUser($request, $data['userName']);
+      updateUser($data);
+    }else{
+      $user = User::create([
+        'external_id' => $data['externalId'],
+        'first_name' => $data['name']['givenName'],
+        'last_name' => $data['name']['familyName'],
+        'username' => $data['name']['formatted'],
+        'email' => $data['userName'],
+        'active' => $data['active'],
+        'password' => Hash::make('password'),
+      ]);
     }
-    
-    $user = User::create([
-      'first_name' => $data['name']['givenName'],
-      'last_name' => $data['name']['familyName'],
-      'username' => $data['userName'],
-      'email' => $data['userName'],
-      'active' => $data['active'],
-      'password' => Hash::make('password'),
-    ]);
-    
+  
     Log::debug('============Response Users POST start=============');
     Log::debug('ユーザー作成');
     Log::debug('============Response Users POST end=============');
     
-    return UserResource::make($user)
-    ->response()
-    ->setStatusCode(Response::HTTP_CREATED);
+    return responseUserData($data['userName'], Response::HTTP_CREATED);
   }
   
   public function show(Request $request, string $email)
@@ -117,54 +137,105 @@ class AdminUserProvisionController extends Controller
     Log::debug('ユーザー取得');
     Log::debug('============Response Users/{email} GET end=============');
     
-    return UserResource::make($user)
-    ->response()
-    ->setStatusCode(Response::HTTP_OK);
+    return responseUserData($email, Response::HTTP_OK);
+  }
+  
+  public function delete(Request $request, string $email)
+  {
+    Log::debug('============Request Users/{email} DELETE start=============');
+    Log::debug($request->all());
+    Log::debug('============Request Users/{email} DELETE end=============');
+    
+    try {
+      User::where($email)->delete();
+    } catch (\Exception $exception) {
+      return $this->scimError('User does not exist', Response::HTTP_NOT_FOUND);
+    }
+    
+    Log::debug('============Response Users/{email} DELETE start=============');
+    Log::debug('ユーザー取得');
+    Log::debug('============Response Users/{email} DELETE end=============');
+    
+    return response()->setStatusCode(Response::HTTP_NO_CONTENT);
   }
   
   public function update(Request $request, string $email)
   {
+    $data = $request->all();
+    
     Log::debug('============Request Users/{email} PATCH start=============');
     Log::debug($request->all());
     Log::debug('============Request Users/{email} PATCH end=============');
-    return $this->updateUser($request, $email);
+    
+    $updateDetail = array();
+    
+    if ($data['Operations']) {
+      foreach ($data['Operations'] as $key => $value) {
+        if ($value['op'] != 'Replace') {
+          continue;
+        }
+        if(strpos($value['path'],'email') !== false){
+          $updateDetail['userName'] = $value['value'];
+          continue;
+        }
+        if(strpos($value['path'],'familyName') !== false){
+          $updateDetail['name']['familyName'] = $value['value'];
+          continue;
+        }
+        if(strpos($value['path'],'formatted') !== false){
+          $updateDetail['name']['formatted'] = $value['value'];
+          continue;
+        }
+        if(strpos($value['path'],'givenName') !== false){
+          $updateDetail['givenName'] = $value['value'];
+          continue;
+        }
+        if(strpos($value['path'],'externalId') !== false){
+          $updateDetail['externalId'] = $value['value'];
+          continue;
+        }
+        if(strpos($value['path'],'userName') !== false){
+          $updateDetail['userName'] = $value['value'];
+          continue;
+        }
+      }
+      updateUser($updateDetail);
+    }
+    
+    return responseUserData($email, Response::HTTP_OK);
   }
   
-  private function updateUser($request, string $email)
+  /**
+   * Update user data
+   * @param array $requestData
+   */
+  private function updateUser(array $requestData)
   {
-    $user = User::where('email', $email)->firstOrFail();
-    
-    $validatedData = $request->all();
-    $active = Arr::get($validatedData, 'active') ??
-    Arr::get($validatedData, 'Operations.value.active') ??
-    null;
-    
-    // We only care about updating the user's secure access on activation,
-    // so return early if there's been no change to their active status
-    if ($active === null) {
-      return UserResource::make($user)
-      ->response()
-      ->setStatusCode(Response::HTTP_OK);
+    $user = User::where('email', $requestData['userName'])->firstOrFail();   
+    if ($requestData['active']) {
+      $user->active = $requestData['active'];
     }
-    
-    $user->active = $active;
-    
-    // If user is active, ensure secure access permission
-    // if ($user->active && !$user->hasAccess('secure.access')) {
-    //   $user->updatePermission('secure.access', true, true);
-    // }
-    
-    if ($user->isDirty()) {
-      $user->save();
-    }
+    if ($requestData['name']['formatted']) {
+      $user->user_name = $requestData['name']['formatted'];
+    } 
+    if ($requestData['name']['givenName']) {
+      $user->first_name = $requestData['name']['givenName'];
+    } 
+    if ($requestData['name']['familyName']) {
+      $user->last_name = $requestData['name']['familyName'];
+    } 
+    if ($requestData['externalId']) {
+      $user->external_id = $requestData['externalId'];
+    } 
+    if ($requestData['userName']) {
+      $user->email = $requestData['userName'];
+    } 
+    $user->save();
     
     Log::debug('============Response Users/{email} PATCH start=============');
     Log::debug('ユーザー更新');
     Log::debug('============Response Users/{email} PATCH end=============');
     
-    return UserResource::make($user)
-    ->response()
-    ->setStatusCode(Response::HTTP_OK);
   }
   
   /**
@@ -177,12 +248,46 @@ class AdminUserProvisionController extends Controller
   */
   protected function scimError(?string $message, int $statusCode): JsonResponse
   {
-    return response()
-    ->json([
-      'schemas' => ["urn:ietf:params:scim:api:messages:2.0:Error"],
-      'detail' => $message ?? 'An error occured',
-      'status' => $statusCode,
+    return response()->json(
+      [
+        'schemas' => ["urn:ietf:params:scim:api:messages:2.0:Error"],
+        'detail' => $message ?? 'An error occured',
+        'status' => $statusCode,
       ])->setStatusCode($statusCode);
-    }
   }
   
+  /**
+  * Returns Create User message
+  *
+  * @param string $email
+  *
+  * @return JsonResponse
+  */
+  private function responseUserData(string $email, int $statusCode): JsonResponse
+  {
+    $user = User::where('email', $email)->firstOrFail();
+    return response()->json(
+      [
+        'schemas' => ['urn:ietf:params:scim:schemas:core:2.0:User'],
+        'id' => $user->email,
+        'externalId' => $user->external_id,
+        'meta' => [
+            'resourceType' => 'User',
+            'created' => $user->created_at->toIso8601String(),
+            'lastModified' => $user->updated_at->toIso8601String(),
+        ],
+        'userName' => $user->email,
+        'name' => [
+            'formatted' => $user->user_name,
+            'givenName' => $user->first_name,
+            'familyName' => $user->last_name,
+        ],
+        'active' => $user->active,
+        'emails' => [
+          'value' => $user->email,
+          'type' => 'work',
+          'primary' => 'true'
+        ]
+      ])->setStatusCode($statusCode);
+  }
+}
