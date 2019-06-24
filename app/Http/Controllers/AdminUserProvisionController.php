@@ -105,9 +105,9 @@ class AdminUserProvisionController extends Controller
     }else{
       $user = User::create([
         'external_id' => $data['externalId'],
-        'givenName' => $data['name']['givenName'],
-        'familyName' => $data['name']['familyName'],
-        'username' => $data['name']['formatted'],
+        'given_name' => $data['name']['givenName'],
+        'family_name' => $data['name']['familyName'],
+        'user_name' => $data['name']['formatted'],
         'email' => $data['userName'],
         'active' => $data['active'],
         'password' => Hash::make('password'),
@@ -219,10 +219,10 @@ class AdminUserProvisionController extends Controller
       $user->user_name = $requestData['name']['formatted'];
     } 
     if ($requestData['name']['givenName']) {
-      $user->givenName = $requestData['name']['givenName'];
+      $user->given_name = $requestData['name']['givenName'];
     } 
     if ($requestData['name']['familyName']) {
-      $user->familyName = $requestData['name']['familyName'];
+      $user->family_name = $requestData['name']['familyName'];
     } 
     if ($requestData['externalId']) {
       $user->external_id = $requestData['externalId'];
@@ -279,8 +279,8 @@ class AdminUserProvisionController extends Controller
         'userName' => $user->email,
         'name' => [
             'formatted' => $user->user_name,
-            'givenName' => $user->givenName,
-            'familyName' => $user->familyName,
+            'givenName' => $user->given_name,
+            'familyName' => $user->family_name,
         ],
         'active' => $user->active,
         'emails' => [
