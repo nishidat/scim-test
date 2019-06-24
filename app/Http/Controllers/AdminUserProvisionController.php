@@ -118,7 +118,7 @@ class AdminUserProvisionController extends Controller
     Log::debug('ユーザー作成');
     Log::debug('============Response Users POST end=============');
     
-    return responseUserData($data['userName'], Response::HTTP_CREATED);
+    return $this->responseUserData($data['userName'], Response::HTTP_CREATED);
   }
   
   public function show(Request $request, string $email)
@@ -137,7 +137,7 @@ class AdminUserProvisionController extends Controller
     Log::debug('ユーザー取得');
     Log::debug('============Response Users/{email} GET end=============');
     
-    return responseUserData($email, Response::HTTP_OK);
+    return $this->responseUserData($email, Response::HTTP_OK);
   }
   
   public function delete(Request $request, string $email)
@@ -202,7 +202,7 @@ class AdminUserProvisionController extends Controller
       updateUser($updateDetail);
     }
     
-    return responseUserData($email, Response::HTTP_OK);
+    return $this->responseUserData($email, Response::HTTP_OK);
   }
   
   /**
