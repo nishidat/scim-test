@@ -51,22 +51,22 @@ class AdminUserProvisionController extends Controller
     if ($users->count()) {
       $return['Resources'] = [
         'schemas' => ['urn:ietf:params:scim:schemas:core:2.0:User'],
-        'id' => $user->email,
-        'externalId' => $user->external_id,
+        'id' => $users->email,
+        'externalId' => $users->external_id,
         'meta' => [
             'resourceType' => 'User',
-            'created' => $user->created_at->toIso8601String(),
-            'lastModified' => $user->updated_at->toIso8601String(),
+            'created' => $users->created_at->toIso8601String(),
+            'lastModified' => $users->updated_at->toIso8601String(),
         ],
-        'userName' => $user->email,
+        'userName' => $users->email,
         'name' => [
-            'formatted' => $user->user_name,
-            'givenName' => $user->givenName,
-            'familyName' => $user->familyName,
+            'formatted' => $users->user_name,
+            'givenName' => $users->givenName,
+            'familyName' => $users->familyName,
         ],
-        'active' => $user->active,
+        'active' => $users->active,
         'emails' => [
-          'value' => $user->email,
+          'value' => $users->email,
           'type' => 'work',
           'primary' => 'true'
         ]
