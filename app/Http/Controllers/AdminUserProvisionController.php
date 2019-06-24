@@ -101,7 +101,7 @@ class AdminUserProvisionController extends Controller
     Log::debug('============Request Users POST end=============');
     
     if (User::where('email', $data['userName'])->count()) {
-      updateUser($data);
+      $this->updateUser($data);
     }else{
       $user = User::create([
         'external_id' => $data['externalId'],
@@ -199,7 +199,7 @@ class AdminUserProvisionController extends Controller
           continue;
         }
       }
-      updateUser($updateDetail);
+      $this->updateUser($updateDetail);
     }
     
     return $this->responseUserData($email, Response::HTTP_OK);
