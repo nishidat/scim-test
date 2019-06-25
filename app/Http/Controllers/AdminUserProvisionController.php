@@ -51,7 +51,7 @@ class AdminUserProvisionController extends Controller
     if ($users->count()) {
       $return['Resources'] = [
         'schemas' => ['urn:ietf:params:scim:schemas:core:2.0:User'],
-        'id' => $users->email,
+        'id' => $users->scim_id,
         'externalId' => $users->external_id,
         'meta' => [
             'resourceType' => 'User',
@@ -104,6 +104,7 @@ class AdminUserProvisionController extends Controller
       $this->updateUser($data);
     }else{
       $user = User::create([
+        'scim_id' => hash('sha128', $data['externalId']),
         'external_id' => $data['externalId'],
         'given_name' => $data['name']['givenName'],
         'family_name' => $data['name']['familyName'],
@@ -266,15 +267,17 @@ class AdminUserProvisionController extends Controller
   private function responseUserData(string $email, int $statusCode): JsonResponse
   {
     $user = User::where('email', $email)->firstOrFail();
+    $location = 'https://mmr-commander-staging-scim-devlop.azurewebsites.net/api/scim/v2/Users/'.$user->scim_id;
     return response()->json(
       [
         'schemas' => ['urn:ietf:params:scim:schemas:core:2.0:User'],
-        'id' => $user->email,
+        'id' => $user->scim_id,
         'externalId' => $user->external_id,
         'meta' => [
             'resourceType' => 'User',
             'created' => $user->created_at->toIso8601String(),
             'lastModified' => $user->updated_at->toIso8601String(),
+            'location' => $location
         ],
         'userName' => $user->email,
         'name' => [
@@ -288,6 +291,9 @@ class AdminUserProvisionController extends Controller
           'type' => 'work',
           'primary' => 'true'
         ]
-      ])->setStatusCode($statusCode);
+      ])
+      ->setStatusCode($statusCode)
+      ->header('Content-Type', 'application/scim+json')
+      ->header('Location', $location);
   }
 }

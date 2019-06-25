@@ -15,6 +15,7 @@ class CreateUsersTable extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->increments('id');
+            $table->string('scim_id');
             $table->string('external_id');
             $table->string('user_name')->nullable();
             $table->string('family_name')->nullable();
