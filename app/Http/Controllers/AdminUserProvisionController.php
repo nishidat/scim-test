@@ -122,14 +122,14 @@ class AdminUserProvisionController extends Controller
     return $this->responseUserData($data['userName'], Response::HTTP_CREATED);
   }
   
-  public function show(Request $request, string $email)
+  public function show(Request $request, string $scim_id)
   {
     Log::debug('============Request Users/{email} GET start=============');
     Log::debug($request->all());
     Log::debug('============Request Users/{email} GET end=============');
     
     try {
-      $user = User::where($email)->firstOrFail();
+      $user = User::where('scim_id', $scim_id)->firstOrFail();
     } catch (\Exception $exception) {
       return $this->scimError('User does not exist', Response::HTTP_NOT_FOUND);
     }
@@ -138,7 +138,7 @@ class AdminUserProvisionController extends Controller
     Log::debug('ユーザー取得');
     Log::debug('============Response Users/{email} GET end=============');
     
-    return $this->responseUserData($email, Response::HTTP_OK);
+    return $this->responseUserData($scim_id, Response::HTTP_OK);
   }
   
   public function delete(Request $request, string $email)
@@ -264,9 +264,9 @@ class AdminUserProvisionController extends Controller
   *
   * @return JsonResponse
   */
-  private function responseUserData(string $email, int $statusCode): JsonResponse
+  private function responseUserData(string $scim_id, int $statusCode): JsonResponse
   {
-    $user = User::where('email', $email)->firstOrFail();
+    $user = User::where('scim_id', $scim_id)->firstOrFail();
     $location = 'https://mmr-commander-staging-scim-devlop.azurewebsites.net/api/scim/v2/Users/'.$user->scim_id;
     return response()->json(
       [

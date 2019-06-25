@@ -18,18 +18,18 @@ Route::prefix('scim/v2')
           $router->get('Users', 'AdminUserProvisionController@index')
               ->name('api.user.index');
 
-          $router->get('Users/{email}', 'AdminUserProvisionController@show')
+          $router->get('Users/{scim_id}', 'AdminUserProvisionController@show')
               ->name('api.user.get');
 
           $router->post('Users', 'AdminUserProvisionController@store')
               ->name('api.user.create');
 
-          $router->put('Users/{email}', 'AdminUserProvisionController@replace')
+          $router->put('Users/{scim_id}', 'AdminUserProvisionController@replace')
              ->name('api.user.replace');
 
-          $router->patch('Users/{email}', 'AdminUserProvisionController@update')
+          $router->patch('Users/{scim_id}', 'AdminUserProvisionController@update')
              ->name('api.user.update');
              
-          $router->delete('Users/{email}', 'AdminUserProvisionController@delete')
+          $router->delete('Users/{scim_id}', 'AdminUserProvisionController@delete')
              ->name('api.user.delete');
     });
