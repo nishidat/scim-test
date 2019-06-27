@@ -28,17 +28,23 @@ class AdminUserProvisionController extends Controller
     Log::debug('============Request Users GET end=============');
     
     if ($filter && preg_match('/userName eq (.*)/i', $filter, $matches)) {
-      $users = User::where('email', str_replace('"', '', $matches[1]))->firstOrFail();
-      Log::debug('============email start=============');
-      Log::debug($filter);
-      Log::debug($matches[1]);
-      Log::debug($users);
-      Log::debug('============email end=============');
-    } else {
-      $users = User::all('email');
-      Log::debug('============email all start=============');
-      Log::debug($users);
-      Log::debug('============email all end=============');
+      try {
+        $users = User::where('email', str_replace('"', '', $matches[1]))->firstOrFail();
+        Log::debug('============email start=============');
+        Log::debug($filter);
+        Log::debug($matches[1]);
+        Log::debug($users);
+        Log::debug('============email end=============');
+      } catch (\Exception $e) {
+        $return = [
+          'schemas' => ['urn:ietf:params:scim:api:messages:2.0:ListResponse'],
+          'totalResults' => 0,
+          'startIndex' => 1,
+          'itemsPerPage' => 20,
+          'Resources' => []
+        ];
+        return response()->json($return)->setStatusCode(Response::HTTP_OK);
+      }
     }
     
     $return = [
