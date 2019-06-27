@@ -45,6 +45,15 @@ class AdminUserProvisionController extends Controller
         ];
         return response()->json($return)->setStatusCode(Response::HTTP_OK);
       }
+    }else{
+      $return = [
+        'schemas' => ['urn:ietf:params:scim:api:messages:2.0:ListResponse'],
+        'totalResults' => 0,
+        'startIndex' => 1,
+        'itemsPerPage' => 20,
+        'Resources' => []
+      ];
+      return response()->json($return)->setStatusCode(Response::HTTP_OK);
     }
     
     $return = [
