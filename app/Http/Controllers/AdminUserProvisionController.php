@@ -119,7 +119,7 @@ class AdminUserProvisionController extends Controller
       $this->updateUser($data);
     }else{
       $user = User::create([
-        'scim_id' => hash('sha128', $data['externalId']),
+        'scim_id' => hash('ripemd160', $data['externalId']),
         'external_id' => $data['externalId'],
         'given_name' => $data['name']['givenName'],
         'family_name' => $data['name']['familyName'],
