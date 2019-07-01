@@ -144,6 +144,7 @@ class AdminUserProvisionController extends Controller
   {
     Log::debug('============Request Users/{email} GET start=============');
     Log::debug($request->all());
+    Log::debug($scim_id);
     Log::debug('============Request Users/{email} GET end=============');
     
     try {
