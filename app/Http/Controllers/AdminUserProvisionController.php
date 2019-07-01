@@ -117,9 +117,12 @@ class AdminUserProvisionController extends Controller
     
     if (User::where('email', $data['userName'])->count()) {
       $this->updateUser($data);
+      $user = User::where('email', $data['userName'])->firstOrFail();
+      $scim_id = $user->scim_id;
     }else{
+      $scim_id = hash('ripemd160', $data['externalId']);
       $user = User::create([
-        'scim_id' => hash('ripemd160', $data['externalId']),
+        'scim_id' => $scim_id,
         'external_id' => $data['externalId'],
         'given_name' => $data['name']['givenName'],
         'family_name' => $data['name']['familyName'],
@@ -134,7 +137,7 @@ class AdminUserProvisionController extends Controller
     Log::debug('ユーザー作成');
     Log::debug('============Response Users POST end=============');
     
-    return $this->responseUserData($data['userName'], Response::HTTP_CREATED);
+    return $this->responseUserData($scim_id, Response::HTTP_CREATED);
   }
   
   public function show(Request $request, string $scim_id)
@@ -283,6 +286,36 @@ class AdminUserProvisionController extends Controller
   {
     $user = User::where('scim_id', $scim_id)->firstOrFail();
     $location = 'https://mmr-commander-staging-scim-devlop.azurewebsites.net/api/scim/v2/Users/'.$user->scim_id;
+    
+    Log::debug('============Response start=============');
+    Log::debug(
+      response()->json(
+        [
+          'schemas' => ['urn:ietf:params:scim:schemas:core:2.0:User'],
+          'id' => $user->scim_id,
+          'externalId' => $user->external_id,
+          'meta' => [
+              'resourceType' => 'User',
+              'created' => $user->created_at->toIso8601String(),
+              'lastModified' => $user->updated_at->toIso8601String(),
+              'location' => $location
+          ],
+          'userName' => $user->email,
+          'name' => [
+              'formatted' => $user->user_name,
+              'givenName' => $user->given_name,
+              'familyName' => $user->family_name,
+          ],
+          'active' => $user->active,
+          'emails' => [
+            'value' => $user->email,
+            'type' => 'work',
+            'primary' => 'true'
+          ]
+        ])
+    );
+    Log::debug('============Response end=============');
+    
     return response()->json(
       [
         'schemas' => ['urn:ietf:params:scim:schemas:core:2.0:User'],
