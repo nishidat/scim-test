@@ -340,7 +340,7 @@ class AdminUserProvisionController extends Controller
         ]
       ])
       ->setStatusCode($statusCode)
-      ->header('Content-Type', 'application/scim+json')
-      ->header('Location', $location);
+      ->header('Content-Type', 'application/scim+json');
+      // ->header('Location', $location);
   }
 }
