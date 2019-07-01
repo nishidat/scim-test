@@ -283,7 +283,7 @@ class AdminUserProvisionController extends Controller
   private function responseUserData(string $scim_id, int $statusCode): JsonResponse
   {
     $user = User::where('scim_id', $scim_id)->firstOrFail();
-    $location = 'https://mmr-commander-staging-scim-devlop.azurewebsites.net/api/scim/v2/Users/'.$user->scim_id;
+    $location = 'https://scim-proxy.azurewebsites.net/api/scim/v2/Users/'.$user->scim_id;
     
     Log::debug('============Response start=============');
     Log::debug(
