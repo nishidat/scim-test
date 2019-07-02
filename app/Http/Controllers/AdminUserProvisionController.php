@@ -179,59 +179,78 @@ class AdminUserProvisionController extends Controller
     return response()->setStatusCode(Response::HTTP_NO_CONTENT);
   }
   
-  public function update(Request $request, string $email)
+  public function update(Request $request, string $scim_id)
   {
     $data = $request->all();
     
-    Log::debug('============Request Users/{email} PATCH start=============');
+    Log::debug('============Request Users/{scim_id} PATCH start=============');
     Log::debug($request->all());
-    Log::debug('============Request Users/{email} PATCH end=============');
+    Log::debug('============Request Users/{scim_id} PATCH end=============');
     
     $updateDetail = array();
+    if (!isset($data['Operations'])) {
+      return $this->scimError('User does not exist', Response::HTTP_NOT_FOUND);
+    }
+    
+    try {
+      $user = User::where('scim_id', $scim_id)->firstOrFail();
+    } catch (\Exception $exception) {
+      return $this->scimError('User does not exist', Response::HTTP_NOT_FOUND);
+    }
     
     if ($data['Operations']) {
       foreach ($data['Operations'] as $key => $value) {
-        if ($value['op'] != 'Replace') {
+        if (!($value['op'] == 'Replace' || $value['op'] == 'Add')) {
           continue;
         }
         if(strpos($value['path'],'email') !== false){
+          Log::debug($value['value']);
           $updateDetail['userName'] = $value['value'];
           continue;
         }
         if(strpos($value['path'],'familyName') !== false){
+          Log::debug($value['value']);
           $updateDetail['name']['familyName'] = $value['value'];
           continue;
         }
         if(strpos($value['path'],'formatted') !== false){
+          Log::debug($value['value']);
           $updateDetail['name']['formatted'] = $value['value'];
           continue;
         }
         if(strpos($value['path'],'givenName') !== false){
+          Log::debug($value['value']);
           $updateDetail['givenName'] = $value['value'];
           continue;
         }
         if(strpos($value['path'],'externalId') !== false){
+          Log::debug($value['value']);
           $updateDetail['externalId'] = $value['value'];
           continue;
         }
         if(strpos($value['path'],'userName') !== false){
+          Log::debug($value['value']);
           $updateDetail['userName'] = $value['value'];
           continue;
         }
       }
-      $this->updateUser($updateDetail);
+      $this->updateUser($updateDetail,$user->scim_id);
     }
     
-    return $this->responseUserData($email, Response::HTTP_OK);
+    return $this->responseUserData($user->scim_id, Response::HTTP_OK);
   }
   
   /**
    * Update user data
    * @param array $requestData
    */
-  private function updateUser(array $requestData)
+  private function updateUser(array $requestData, string $scim_id = null)
   {
-    $user = User::where('email', $requestData['userName'])->firstOrFail();   
+    if ($scim_id) {
+      $user = User::where('scim_id', $scim_id)->firstOrFail();
+    }else{
+      $user = User::where('email', $requestData['userName'])->firstOrFail();
+    }
     if ($requestData['active']) {
       $user->active = $requestData['active'];
     }
