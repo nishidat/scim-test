@@ -115,12 +115,21 @@ class AdminUserProvisionController extends Controller
     Log::debug($request->all());
     Log::debug('============Request Users POST end=============');
     
+    if (!isset($data['userName'])) {
+      $this->scimError('User does not exist', Response::HTTP_NOT_FOUND);
+    }
+    
     if (User::where('email', $data['userName'])->count()) {
       $this->updateUser($data);
       $user = User::where('email', $data['userName'])->firstOrFail();
       $scim_id = $user->scim_id;
     }else{
       $scim_id = hash('ripemd160', $data['externalId']);
+      if (!isset($data['name'])) {
+        $data['name']['givenName'] = '';
+        $data['name']['familyName'] = '';
+        $data['name']['formatted'] = '';
+      }
       $user = User::create([
         'scim_id' => $scim_id,
         'external_id' => $data['externalId'],
