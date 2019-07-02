@@ -210,12 +210,12 @@ class AdminUserProvisionController extends Controller
         }
         if(strpos($value['path'],'familyName') !== false){
           Log::debug($value['value']);
-          $updateDetail['name']['familyName'] = $value['value'];
+          $updateDetail['familyName'] = $value['value'];
           continue;
         }
         if(strpos($value['path'],'formatted') !== false){
           Log::debug($value['value']);
-          $updateDetail['name']['formatted'] = $value['value'];
+          $updateDetail['formatted'] = $value['value'];
           continue;
         }
         if(strpos($value['path'],'givenName') !== false){
@@ -254,14 +254,14 @@ class AdminUserProvisionController extends Controller
     if (isset($requestData['active'])) {
       $user->active = $requestData['active'];
     }
-    if (isset($requestData['name']['formatted'])) {
-      $user->user_name = $requestData['name']['formatted'];
+    if (isset($requestData['formatted'])) {
+      $user->user_name = $requestData['formatted'];
     } 
-    if (isset($requestData['name']['givenName'])) {
-      $user->given_name = $requestData['name']['givenName'];
+    if (isset($requestData['givenName'])) {
+      $user->given_name = $requestData['givenName'];
     } 
-    if (isset($requestData['name']['familyName'])) {
-      $user->family_name = $requestData['name']['familyName'];
+    if (isset($requestData['familyName'])) {
+      $user->family_name = $requestData['familyName'];
     } 
     if (isset($requestData['externalId'])) {
       $user->external_id = $requestData['externalId'];
