@@ -251,22 +251,22 @@ class AdminUserProvisionController extends Controller
     }else{
       $user = User::where('email', $requestData['userName'])->firstOrFail();
     }
-    if ($requestData['active']) {
+    if (isset($requestData['active'])) {
       $user->active = $requestData['active'];
     }
-    if ($requestData['name']['formatted']) {
+    if (isset($requestData['name']['formatted'])) {
       $user->user_name = $requestData['name']['formatted'];
     } 
-    if ($requestData['name']['givenName']) {
+    if (isset($requestData['name']['givenName'])) {
       $user->given_name = $requestData['name']['givenName'];
     } 
-    if ($requestData['name']['familyName']) {
+    if (isset($requestData['name']['familyName'])) {
       $user->family_name = $requestData['name']['familyName'];
     } 
-    if ($requestData['externalId']) {
+    if (isset($requestData['externalId'])) {
       $user->external_id = $requestData['externalId'];
     } 
-    if ($requestData['userName']) {
+    if (isset($requestData['userName'])) {
       $user->email = $requestData['userName'];
     } 
     $user->save();
