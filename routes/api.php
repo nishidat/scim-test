@@ -15,6 +15,7 @@ use Illuminate\Http\Request;
 
 Route::prefix('scim/v2')
     ->group(function (\Illuminate\Routing\Router $router) {
+          // Users
           $router->get('Users', 'AdminUserProvisionController@index')
               ->name('api.user.index');
 
@@ -32,4 +33,11 @@ Route::prefix('scim/v2')
              
           $router->delete('Users/{scim_id}', 'AdminUserProvisionController@delete')
              ->name('api.user.delete');
+          // Group
+          $router->post('Groups', 'AdminGroupProvisionController@store')
+             ->name('api.group.create');
+          $router->get('Groups/{external_id}', 'AdminGroupProvisionController@show')
+             ->name('api.group.show');
+          $router->patch('Groups/{external_id}', 'AdminGroupProvisionController@update')
+             ->name('api.group.update');
     });
