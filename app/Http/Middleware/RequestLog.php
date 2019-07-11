@@ -16,9 +16,9 @@ class RequestLog
      */
     public function handle($request, Closure $next)
     {
-        Log::debug('============Request '.$request->method().' '.$request->query("q", "/").' '.http_build_query($query).' Start=============');
+        Log::debug('============Request '.$request->method().' '.$request->path().' Start=============');
         Log::debug($request->all());
-        Log::debug('============Request '.$request->method().' '.$request->query("q", "/").' '.http_build_query($query).' End=============');
+        Log::debug('============Request '.$request->method().' '.$request->path().' End=============');
         return $next($request);
     }
 }
