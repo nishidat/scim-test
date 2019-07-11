@@ -57,6 +57,8 @@ class AdminUserProvisionController extends Controller
         }else{
             $users = $this->createUser($data);
         }
+        Log::debug('型');
+        Log::debug(gettype($users));
         
         return response()->json($this->createReturnData($users))
         ->setStatusCode(Response::HTTP_CREATED)
@@ -162,7 +164,7 @@ class AdminUserProvisionController extends Controller
     * [createUser ユーザー情報登録]
     * @param  array   $requestData [登録内容]
     * 
-    * @return instanceof  $users       [usersテーブルオブジェクト]
+    * @return object  $users       [usersテーブルオブジェクト]
     */
     private function createUser(array $requestData){
         Log::debug('ユーザー情報登録内容');
@@ -192,7 +194,7 @@ class AdminUserProvisionController extends Controller
     * @param  array   $requestData [更新内容]
     * @param  string|null $scim_id [scim_id]
     * 
-    * @return instanceof $users        [usersテーブルオブジェクト]
+    * @return object $users        [usersテーブルオブジェクト]
     */
     private function updateUser(array $requestData, ?string $scim_id = null)
     {
@@ -255,11 +257,11 @@ class AdminUserProvisionController extends Controller
         
     /**
     * [createGetReturnData GETリクエスト用レスポンスデータ作成]
-    * @param  instanceof|null $users [usersテーブルオブジェクト]
+    * @param  object|null $users [usersテーブルオブジェクト]
     * 
     * @return array $return
     */
-    private function createGetReturnData(?instanceof $users = null)
+    private function createGetReturnData(?object $users = null)
     {
         $return = [
             'schemas' => ['urn:ietf:params:scim:api:messages:2.0:ListResponse'],
@@ -300,11 +302,11 @@ class AdminUserProvisionController extends Controller
     /**
     * [createReturnData レスポンスデータ作成]
     *
-    * @param  instanceof $users [usersテーブルオブジェクト]
+    * @param  object $users [usersテーブルオブジェクト]
     *
     * @return array $return
     */
-    private function createReturnData(instanceof $users)
+    private function createReturnData(object $users)
     {
         $location = getenv('LOCATION_URL').'/Users/'.$users->scim_id;
         $return = [
