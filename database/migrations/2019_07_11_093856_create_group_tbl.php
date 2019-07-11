@@ -28,6 +28,6 @@ class CreateGroupTbl extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('group_tbl');
+        Schema::dropIfExists('groups');
     }
 }
