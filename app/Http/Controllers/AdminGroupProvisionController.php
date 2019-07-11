@@ -206,7 +206,7 @@ class AdminGroupProvisionController extends Controller
     * 
     * @return object $groups        [groupsテーブルオブジェクト]
     */
-    private function updateGroup(array $requestData, ?string $scim_id)
+    private function updateGroup(array $requestData, ?string $scim_id = null)
     {
         Log::debug('グループ情報更新内容');
         Log::debug($requestData);
@@ -239,7 +239,7 @@ class AdminGroupProvisionController extends Controller
     *
     * @return JsonResponse
     */
-    private function scimError(?string $message, int $statusCode): JsonResponse
+    private function scimError(?string $message = null, int $statusCode): JsonResponse
     {
         return response()->json(
             [
@@ -256,7 +256,7 @@ class AdminGroupProvisionController extends Controller
     * 
     * @return array $return
     */
-    private function createGetReturnData(?object $groups)
+    private function createGetReturnData(?object $groups = null)
     {
         $return = [
             'schemas' => ['urn:ietf:params:scim:api:messages:2.0:ListResponse'],

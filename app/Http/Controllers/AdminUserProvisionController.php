@@ -194,7 +194,7 @@ class AdminUserProvisionController extends Controller
     * 
     * @return object $users        [usersテーブルオブジェクト]
     */
-    private function updateUser(array $requestData, ?string $scim_id)
+    private function updateUser(array $requestData, ?string $scim_id = null)
     {
         Log::debug('ユーザー情報更新内容');
         Log::debug($requestData);
@@ -242,7 +242,7 @@ class AdminUserProvisionController extends Controller
     *
     * @return JsonResponse
     */
-    private function scimError(?string $message, int $statusCode): JsonResponse
+    private function scimError(?string $message = null, int $statusCode): JsonResponse
     {
         return response()->json(
             [
@@ -259,7 +259,7 @@ class AdminUserProvisionController extends Controller
     * 
     * @return array $return
     */
-    private function createGetReturnData(?object $users)
+    private function createGetReturnData(?object $users = null)
     {
         $return = [
             'schemas' => ['urn:ietf:params:scim:api:messages:2.0:ListResponse'],
