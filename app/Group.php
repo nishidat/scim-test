@@ -12,4 +12,14 @@ class Group extends Model
    * @var string
    */
   protected $table = 'groups';
+  
+  /**
+   * The attributes that are mass assignable.
+   *
+   * @var array
+   */
+  protected $fillable = [
+      'scim_id','external_id', 'group_name'
+  ];
+
 }
