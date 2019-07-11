@@ -15,6 +15,7 @@ class CreateGroupTbl extends Migration
     {
         Schema::create('groups', function (Blueprint $table) {
             $table->increments('id');
+            $table->string('scim_id');
             $table->string('external_id')->unique();
             $table->string('group_name');
             $table->timestamps();

@@ -3,372 +3,334 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\SCIM\UserResource;
-//use Illuminate\Foundation\Auth\User;
 use App\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Hash;
 use Symfony\Component\HttpFoundation\Response;
 use Log;
 
 class AdminUserProvisionController extends Controller
 {
-  /**
-  * Display a listing of the resource.
-  *
-  * @throws \Exception
-  */
-  public function index(Request $request)
-  {
-    $filter = $request->get('filter');
+    /**
+    * [index クエリによるユーザーの取得]
+    * @param  Request $request
+    * 
+    * @return JsonResponse
+    */
+    public function index(Request $request)
+    {
+        $filter = $request->get('filter');
+        if ($filter && preg_match('/userName eq (.*)/i', $filter, $matches)) {
+            try {
+                $users = User::where('email', str_replace('"', '', $matches[1]))->firstOrFail();
+                $res_data = $this->createGetReturnData($users);
+            } catch (\Exception $e) {
+                Log::debug('内部DBにリクエストされたユーザーは見つかりません。');
+                $res_data = $this->createGetReturnData();
+            }
+        }else{
+            // ヘルスチェックのため、正常ステータスで返却する
+            Log::debug('filterがリクエストされていません。');
+            $res_data = $this->createGetReturnData();
+        }
+        
+        return response()->json($res_data)
+        ->setStatusCode(Response::HTTP_OK)
+        ->header('Content-Type', 'application/scim+json');
+    }
     
-    Log::debug('============Request Users GET start=============');
-    Log::debug($request->all());
-    Log::debug('============Request Users GET end=============');
+    /**
+    * [store ユーザーの作成]
+    * @param  Request $request 
+    * 
+    * @return JsonResponse
+    */
+    public function store(Request $request)
+    {
+        $data = $request->all();
+        if (!isset($data['userName'])) {
+            return $this->scimError('User does not exist', Response::HTTP_NOT_FOUND);
+        }
+        if (User::where('email', $data['userName'])->count() > 0) {
+            $users = $this->updateUser($data);
+        }else{
+            $users = $this->createUser($data);
+        }
+        
+        return response()->json($this->createReturnData($users))
+        ->setStatusCode(Response::HTTP_CREATED)
+        ->header('Content-Type', 'application/scim+json');
+    }
     
-    if ($filter && preg_match('/userName eq (.*)/i', $filter, $matches)) {
-      try {
-        $users = User::where('email', str_replace('"', '', $matches[1]))->firstOrFail();
-        Log::debug('============email start=============');
-        Log::debug($filter);
-        Log::debug($matches[1]);
-        Log::debug($users);
-        Log::debug('============email end=============');
-      } catch (\Exception $e) {
+    /**
+    * [show ユーザーの取得]
+    * @param  Request $request
+    * @param  string  $scim_id [scim_id]
+    * 
+    * @return JsonResponse
+    */
+    public function show(Request $request, string $scim_id)
+    {
+        try {
+            $users = User::where('scim_id', $scim_id)->firstOrFail();
+        } catch (\Exception $exception) {
+            return $this->scimError('User does not exist', Response::HTTP_NOT_FOUND);
+        }
+        
+        return response()->json($this->createReturnData($users))
+        ->setStatusCode(Response::HTTP_OK)
+        ->header('Content-Type', 'application/scim+json');
+    }
+    
+    /**
+    * [delete ユーザーの削除]
+    * @param  Request $request
+    * @param  string  $scim_id [scim_id]
+    * 
+    * @return JsonResponse
+    */
+    public function delete(Request $request, string $scim_id)
+    {
+        if (User::where('scim_id', $scim_id)->delete() < 0) {
+            return $this->scimError('User does not exist', Response::HTTP_NOT_FOUND);
+        }
+        
+        return response()->setStatusCode(Response::HTTP_NO_CONTENT);
+    }
+    
+    /**
+    * [update ユーザーの更新]
+    * @param  Request $request
+    * @param  string  $scim_id [scim_id]
+    * 
+    * @return JsonResponse
+    */
+    public function update(Request $request, string $scim_id)
+    {
+        $data = $request->all();
+        $updateDetail = array();
+        if (!isset($data['Operations'])) {
+            return $this->scimError('User does not exist', Response::HTTP_NOT_FOUND);
+        }
+        try {
+            $users = User::where('scim_id', $scim_id)->firstOrFail();
+            if ($data['Operations']) {
+                foreach ($data['Operations'] as $key => $value) {
+                    if (!($value['op'] == 'Replace' || $value['op'] == 'Add')) {
+                        continue;
+                    }
+                    if(strpos($value['path'],'email') !== false){
+                        $updateDetail['userName'] = $value['value'];
+                        continue;
+                    }
+                    if(strpos($value['path'],'familyName') !== false){
+                        $updateDetail['familyName'] = $value['value'];
+                        continue;
+                    }
+                    if(strpos($value['path'],'formatted') !== false){
+                        $updateDetail['formatted'] = $value['value'];
+                        continue;
+                    }
+                    if(strpos($value['path'],'givenName') !== false){
+                        $updateDetail['givenName'] = $value['value'];
+                        continue;
+                    }
+                    if(strpos($value['path'],'externalId') !== false){
+                        $updateDetail['externalId'] = $value['value'];
+                        continue;
+                    }
+                    if(strpos($value['path'],'userName') !== false){
+                        $updateDetail['userName'] = $value['value'];
+                        continue;
+                    }
+                }
+                $update_users = $this->updateUser($updateDetail,$scim_id);
+            }else{
+                return $this->scimError('User does not exist', Response::HTTP_NOT_FOUND);
+            }
+        } catch (\Exception $exception) {
+            return $this->scimError('User does not exist', Response::HTTP_NOT_FOUND);
+        }
+        
+        return response()->json($this->createReturnData($update_users))
+        ->setStatusCode(Response::HTTP_OK)
+        ->header('Content-Type', 'application/scim+json');
+    }
+    
+    /**
+    * [createUser ユーザー情報登録]
+    * @param  array   $requestData [登録内容]
+    * 
+    * @return object  $users       [usersテーブルオブジェクト]
+    */
+    private function createUser(array $requestData){
+        Log::debug('ユーザー情報登録内容');
+        Log::debug($requestData);
+        $scim_id = hash('ripemd160', $requestData['externalId']);
+        if (!isset($requestData['name'])) {
+            $requestData['name']['givenName'] = '';
+            $requestData['name']['familyName'] = '';
+            $requestData['name']['formatted'] = '';
+        }
+        $users = User::create([
+            'scim_id' => $scim_id,
+            'external_id' => $requestData['externalId'],
+            'given_name' => $requestData['name']['givenName'],
+            'family_name' => $requestData['name']['familyName'],
+            'user_name' => $requestData['name']['formatted'],
+            'email' => $requestData['userName'],
+            'active' => $requestData['active'],
+            'password' => Hash::make('password'),
+        ]);
+        Log::debug('ユーザー情報登録完了');
+        return $users;
+    }
+    
+    /**
+    * [updateUser ユーザー情報更新]
+    * @param  array   $requestData [更新内容]
+    * @param  string|null $scim_id [scim_id]
+    * 
+    * @return object $users        [usersテーブルオブジェクト]
+    */
+    private function updateUser(array $requestData, ?string $scim_id)
+    {
+        Log::debug('ユーザー情報更新内容');
+        Log::debug($requestData);
+        try {
+            if (!empty($scim_id)) {
+                $users = User::where('scim_id', $scim_id)->firstOrFail();
+            }else{
+                if (isset($requestData['userName'])) {
+                    $users = User::where('email', $requestData['userName'])->firstOrFail();
+                }else{
+                    return $this->scimError('User does not exist', Response::HTTP_NOT_FOUND);
+                }
+            }
+        } catch (\Exception $exception) {
+            return $this->scimError('User does not exist', Response::HTTP_NOT_FOUND);
+        }
+        if (isset($requestData['active'])) {
+            $users->active = $requestData['active'];
+        }
+        if (isset($requestData['formatted'])) {
+            $users->user_name = $requestData['formatted'];
+        } 
+        if (isset($requestData['givenName'])) {
+            $users->given_name = $requestData['givenName'];
+        } 
+        if (isset($requestData['familyName'])) {
+            $users->family_name = $requestData['familyName'];
+        } 
+        if (isset($requestData['externalId'])) {
+            $users->external_id = $requestData['externalId'];
+        } 
+        if (isset($requestData['userName'])) {
+            $users->email = $requestData['userName'];
+        } 
+        $users->save();
+        Log::debug('ユーザー情報更新完了');
+        return $users;
+    }
+    
+    /**
+    * Returns a SCIM-formatted error message
+    *
+    * @param string|null $message
+    * @param int $statusCode
+    *
+    * @return JsonResponse
+    */
+    private function scimError(?string $message, int $statusCode): JsonResponse
+    {
+        return response()->json(
+            [
+                'schemas' => ["urn:ietf:params:scim:api:messages:2.0:Error"],
+                'detail' => $message ?? 'An error occured',
+                'status' => $statusCode,    
+            ])
+            ->setStatusCode($statusCode);
+    }
+        
+    /**
+    * [createGetReturnData GETリクエスト用レスポンスデータ作成]
+    * @param  object|null $users [usersテーブルオブジェクト]
+    * 
+    * @return array $return
+    */
+    private function createGetReturnData(?object $users)
+    {
         $return = [
-          'schemas' => ['urn:ietf:params:scim:api:messages:2.0:ListResponse'],
-          'totalResults' => 0,
-          'startIndex' => 1,
-          'itemsPerPage' => 20,
-          'Resources' => []
+            'schemas' => ['urn:ietf:params:scim:api:messages:2.0:ListResponse'],
+            'startIndex' => 1,
+            'itemsPerPage' => 20
         ];
-        return response()->json($return)->setStatusCode(Response::HTTP_OK);
-      }
-    }else{
-      $return = [
-        'schemas' => ['urn:ietf:params:scim:api:messages:2.0:ListResponse'],
-        'totalResults' => 0,
-        'startIndex' => 1,
-        'itemsPerPage' => 20,
-        'Resources' => []
-      ];
-      return response()->json($return)->setStatusCode(Response::HTTP_OK);
-    }
-    
-    $return = [
-      'schemas' => ['urn:ietf:params:scim:api:messages:2.0:ListResponse'],
-      'totalResults' => $users->count(),
-      'startIndex' => 1,
-      'itemsPerPage' => 20
-    ];
-    
-    if ($users->count()) {
-      $return['Resources'] = [
-        'schemas' => ['urn:ietf:params:scim:schemas:core:2.0:User'],
-        'id' => $users->scim_id,
-        'externalId' => $users->external_id,
-        'meta' => [
-            'resourceType' => 'User',
-            'created' => $users->created_at->toIso8601String(),
-            'lastModified' => $users->updated_at->toIso8601String(),
-        ],
-        'userName' => $users->email,
-        'name' => [
-            'formatted' => $users->user_name,
-            'givenName' => $users->givenName,
-            'familyName' => $users->familyName,
-        ],
-        'active' => $users->active,
-        'emails' => [
-          'value' => $users->email,
-          'type' => 'work',
-          'primary' => 'true'
-        ]
-      ];
-    }else{
-      $return['Resources'] = [];
-    }
-    
-    Log::debug('============Response Users GET start=============');
-    Log::debug($return);
-    Log::debug('============Response Users GET end=============');
-    
-    return response()->json($return)->setStatusCode(Response::HTTP_OK);
-  }
-  
-  /**
-  * Show the form for creating a new resource.
-  *
-  * @throws \Exception
-  */
-  public function create()
-  {
-    throw new \Exception('Not implemented');
-  }
-  
-  public function store(Request $request)
-  {
-    $data = $request->all();
-    
-    Log::debug('============Request Users POST start=============');
-    Log::debug($request->all());
-    Log::debug('============Request Users POST end=============');
-    
-    if (!isset($data['userName'])) {
-      $this->scimError('User does not exist', Response::HTTP_NOT_FOUND);
-    }
-    
-    if (User::where('email', $data['userName'])->count()) {
-      $this->updateUser($data);
-      $user = User::where('email', $data['userName'])->firstOrFail();
-      $scim_id = $user->scim_id;
-    }else{
-      $scim_id = hash('ripemd160', $data['externalId']);
-      if (!isset($data['name'])) {
-        $data['name']['givenName'] = '';
-        $data['name']['familyName'] = '';
-        $data['name']['formatted'] = '';
-      }
-      $user = User::create([
-        'scim_id' => $scim_id,
-        'external_id' => $data['externalId'],
-        'given_name' => $data['name']['givenName'],
-        'family_name' => $data['name']['familyName'],
-        'user_name' => $data['name']['formatted'],
-        'email' => $data['userName'],
-        'active' => $data['active'],
-        'password' => Hash::make('password'),
-      ]);
-    }
-  
-    Log::debug('============Response Users POST start=============');
-    Log::debug('ユーザー作成');
-    Log::debug('============Response Users POST end=============');
-    
-    return $this->responseUserData($scim_id, Response::HTTP_CREATED);
-  }
-  
-  public function show(Request $request, string $scim_id)
-  {
-    Log::debug('============Request Users/{email} GET start=============');
-    Log::debug($request->all());
-    Log::debug($scim_id);
-    Log::debug('============Request Users/{email} GET end=============');
-    
-    try {
-      $user = User::where('scim_id', $scim_id)->firstOrFail();
-    } catch (\Exception $exception) {
-      return $this->scimError('User does not exist', Response::HTTP_NOT_FOUND);
-    }
-    
-    Log::debug('============Response Users/{email} GET start=============');
-    Log::debug('ユーザー取得');
-    Log::debug('============Response Users/{email} GET end=============');
-    
-    return $this->responseUserData($scim_id, Response::HTTP_OK);
-  }
-  
-  public function delete(Request $request, string $email)
-  {
-    Log::debug('============Request Users/{email} DELETE start=============');
-    Log::debug($request->all());
-    Log::debug('============Request Users/{email} DELETE end=============');
-    
-    try {
-      User::where($email)->delete();
-    } catch (\Exception $exception) {
-      return $this->scimError('User does not exist', Response::HTTP_NOT_FOUND);
-    }
-    
-    Log::debug('============Response Users/{email} DELETE start=============');
-    Log::debug('ユーザー取得');
-    Log::debug('============Response Users/{email} DELETE end=============');
-    
-    return response()->setStatusCode(Response::HTTP_NO_CONTENT);
-  }
-  
-  public function update(Request $request, string $scim_id)
-  {
-    $data = $request->all();
-    
-    Log::debug('============Request Users/{scim_id} PATCH start=============');
-    Log::debug($request->all());
-    Log::debug('============Request Users/{scim_id} PATCH end=============');
-    
-    $updateDetail = array();
-    if (!isset($data['Operations'])) {
-      return $this->scimError('User does not exist', Response::HTTP_NOT_FOUND);
-    }
-    
-    try {
-      $user = User::where('scim_id', $scim_id)->firstOrFail();
-    } catch (\Exception $exception) {
-      return $this->scimError('User does not exist', Response::HTTP_NOT_FOUND);
-    }
-    
-    if ($data['Operations']) {
-      foreach ($data['Operations'] as $key => $value) {
-        if (!($value['op'] == 'Replace' || $value['op'] == 'Add')) {
-          continue;
+        if (isset($users) && $users->count() > 0) {
+            $return['totalResults'] = $users->count();
+            $return['Resources'] = [
+                'schemas' => ['urn:ietf:params:scim:schemas:core:2.0:User'],
+                'id' => $users->scim_id,
+                'externalId' => $users->external_id,
+                'meta' => [
+                    'resourceType' => 'User',
+                    'created' => $users->created_at->toIso8601String(),
+                    'lastModified' => $users->updated_at->toIso8601String(),
+                ],
+                'userName' => $users->email,
+                'name' => [
+                    'formatted' => $users->user_name,
+                    'givenName' => $users->givenName,
+                    'familyName' => $users->familyName,
+                ],
+                'active' => $users->active,
+                'emails' => [
+                    'value' => $users->email,
+                    'type' => 'work',
+                    'primary' => 'true'
+                ]
+            ];
+        }else{
+            $return['totalResults'] = 0;
         }
-        if(strpos($value['path'],'email') !== false){
-          Log::debug($value['value']);
-          $updateDetail['userName'] = $value['value'];
-          continue;
-        }
-        if(strpos($value['path'],'familyName') !== false){
-          Log::debug($value['value']);
-          $updateDetail['familyName'] = $value['value'];
-          continue;
-        }
-        if(strpos($value['path'],'formatted') !== false){
-          Log::debug($value['value']);
-          $updateDetail['formatted'] = $value['value'];
-          continue;
-        }
-        if(strpos($value['path'],'givenName') !== false){
-          Log::debug($value['value']);
-          $updateDetail['givenName'] = $value['value'];
-          continue;
-        }
-        if(strpos($value['path'],'externalId') !== false){
-          Log::debug($value['value']);
-          $updateDetail['externalId'] = $value['value'];
-          continue;
-        }
-        if(strpos($value['path'],'userName') !== false){
-          Log::debug($value['value']);
-          $updateDetail['userName'] = $value['value'];
-          continue;
-        }
-      }
-      $this->updateUser($updateDetail,$user->scim_id);
+        Log::debug($return);
+        return $return;
     }
     
-    return $this->responseUserData($user->scim_id, Response::HTTP_OK);
-  }
-  
-  /**
-   * Update user data
-   * @param array $requestData
-   */
-  private function updateUser(array $requestData, string $scim_id = null)
-  {
-    if ($scim_id) {
-      $user = User::where('scim_id', $scim_id)->firstOrFail();
-    }else{
-      $user = User::where('email', $requestData['userName'])->firstOrFail();
+    /**
+    * [createReturnData レスポンスデータ作成]
+    *
+    * @param  object $users [usersテーブルオブジェクト]
+    *
+    * @return array $return
+    */
+    private function createReturnData(object $users)
+    {
+        $location = getenv('LOCATION_URL').'/Users/'.$users->scim_id;
+        $return = [
+            'schemas' => ['urn:ietf:params:scim:schemas:core:2.0:User'],
+            'id' => $users->scim_id,
+            'externalId' => $users->external_id,
+            'meta' => [
+                'resourceType' => 'User',
+                'created' => $users->created_at->toIso8601String(),
+                'lastModified' => $users->updated_at->toIso8601String(),
+                'location' => $location
+            ],
+            'userName' => $users->email,
+            'name' => [
+                'formatted' => $users->user_name,
+                'givenName' => $users->given_name,
+                'familyName' => $users->family_name,
+            ],
+            'active' => $users->active,
+            'emails' => [
+                'value' => $users->email,
+                'type' => 'work',
+                'primary' => 'true'
+            ]
+        ];
+        Log::debug($return);
+        return $return;
     }
-    if (isset($requestData['active'])) {
-      $user->active = $requestData['active'];
-    }
-    if (isset($requestData['formatted'])) {
-      $user->user_name = $requestData['formatted'];
-    } 
-    if (isset($requestData['givenName'])) {
-      $user->given_name = $requestData['givenName'];
-    } 
-    if (isset($requestData['familyName'])) {
-      $user->family_name = $requestData['familyName'];
-    } 
-    if (isset($requestData['externalId'])) {
-      $user->external_id = $requestData['externalId'];
-    } 
-    if (isset($requestData['userName'])) {
-      $user->email = $requestData['userName'];
-    } 
-    $user->save();
-    
-    Log::debug('ユーザー更新');
-    
-  }
-  
-  /**
-  * Returns a SCIM-formatted error message
-  *
-  * @param string|null $message
-  * @param int $statusCode
-  *
-  * @return JsonResponse
-  */
-  protected function scimError(?string $message, int $statusCode): JsonResponse
-  {
-    return response()->json(
-      [
-        'schemas' => ["urn:ietf:params:scim:api:messages:2.0:Error"],
-        'detail' => $message ?? 'An error occured',
-        'status' => $statusCode,
-      ])->setStatusCode($statusCode);
-  }
-  
-  /**
-  * Returns Create User message
-  *
-  * @param string $email
-  *
-  * @return JsonResponse
-  */
-  private function responseUserData(string $scim_id, int $statusCode): JsonResponse
-  {
-    $user = User::where('scim_id', $scim_id)->firstOrFail();
-    $location = 'https://scim-proxy.azurewebsites.net/api/scim/v2/Users/'.$user->scim_id;
-    
-    Log::debug('============Response start=============');
-    Log::debug(
-      response()->json(
-        [
-          'schemas' => ['urn:ietf:params:scim:schemas:core:2.0:User'],
-          'id' => $user->scim_id,
-          'externalId' => $user->external_id,
-          'meta' => [
-              'resourceType' => 'User',
-              'created' => $user->created_at->toIso8601String(),
-              'lastModified' => $user->updated_at->toIso8601String(),
-              'location' => $location
-          ],
-          'userName' => $user->email,
-          'name' => [
-              'formatted' => $user->user_name,
-              'givenName' => $user->given_name,
-              'familyName' => $user->family_name,
-          ],
-          'active' => $user->active,
-          'emails' => [
-            'value' => $user->email,
-            'type' => 'work',
-            'primary' => 'true'
-          ]
-        ])
-    );
-    Log::debug('============Response end=============');
-    
-    return response()->json(
-      [
-        'schemas' => ['urn:ietf:params:scim:schemas:core:2.0:User'],
-        'id' => $user->scim_id,
-        'externalId' => $user->external_id,
-        'meta' => [
-            'resourceType' => 'User',
-            'created' => $user->created_at->toIso8601String(),
-            'lastModified' => $user->updated_at->toIso8601String(),
-            'location' => $location
-        ],
-        'userName' => $user->email,
-        'name' => [
-            'formatted' => $user->user_name,
-            'givenName' => $user->given_name,
-            'familyName' => $user->family_name,
-        ],
-        'active' => $user->active,
-        'emails' => [
-          'value' => $user->email,
-          'type' => 'work',
-          'primary' => 'true'
-        ]
-      ])
-      ->setStatusCode($statusCode)
-      ->header('Content-Type', 'application/scim+json');
-      // ->header('Location', $location);
-  }
 }

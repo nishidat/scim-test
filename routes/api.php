@@ -34,12 +34,14 @@ Route::prefix('scim/v2')
           $router->delete('Users/{scim_id}', 'AdminUserProvisionController@delete')
              ->name('api.user.delete');
           // Group
-          $router->get('Users', 'AdminGroupProvisionController@index')
+          $router->get('Groups', 'AdminGroupProvisionController@index')
              ->name('api.group.index');
           $router->post('Groups', 'AdminGroupProvisionController@store')
              ->name('api.group.create');
-          $router->get('Groups/{external_id}', 'AdminGroupProvisionController@show')
+          $router->get('Groups/{scim_id}', 'AdminGroupProvisionController@show')
              ->name('api.group.show');
-          $router->patch('Groups/{external_id}', 'AdminGroupProvisionController@update')
+          $router->patch('Groups/{scim_id}', 'AdminGroupProvisionController@update')
              ->name('api.group.update');
-    });
+          $router->delete('Groups/{scim_id}', 'AdminGroupProvisionController@delete')
+             ->name('api.group.delete');
+    })->middleware('requestlog');
