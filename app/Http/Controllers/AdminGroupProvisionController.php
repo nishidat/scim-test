@@ -184,7 +184,7 @@ class AdminGroupProvisionController extends Controller
     * [createGroup グループ情報登録]
     * @param  array   $requestData [登録内容]
     * 
-    * @return object $groups        [groupsテーブルオブジェクト]
+    * @return Group $groups        [groupsテーブルオブジェクト]
     */
     private function createGroup(array $requestData){
         Log::debug('グループ情報登録内容');
@@ -204,7 +204,7 @@ class AdminGroupProvisionController extends Controller
     * @param  array   $requestData [更新内容]
     * @param  string|null $scim_id [scim_id]
     * 
-    * @return object $groups        [groupsテーブルオブジェクト]
+    * @return Group $groups        [groupsテーブルオブジェクト]
     */
     private function updateGroup(array $requestData, ?string $scim_id = null)
     {
@@ -241,22 +241,22 @@ class AdminGroupProvisionController extends Controller
     */
     private function scimError(?string $message = null, int $statusCode): JsonResponse
     {
-        return response()->json(
-            [
-                'schemas' => ["urn:ietf:params:scim:api:messages:2.0:Error"],
-                'detail' => $message ?? 'An error occured',
-                'status' => $statusCode,    
-            ])
-            ->setStatusCode($statusCode);
+        $return = [
+            'schemas' => ["urn:ietf:params:scim:api:messages:2.0:Error"],
+            'detail' => $message ?? 'An error occured',
+            'status' => $statusCode,    
+        ];
+        Log::debug($return);
+        return response()->json($return)->setStatusCode($statusCode);
     }
     
     /**
     * [createGetReturnData GETリクエスト用レスポンスデータ作成]
-    * @param  object|null $groups [groupsテーブルオブジェクト]
+    * @param  Group|null $groups [groupsテーブルオブジェクト]
     * 
     * @return array $return
     */
-    private function createGetReturnData(?object $groups = null)
+    private function createGetReturnData(?Group $groups = null)
     {
         $return = [
             'schemas' => ['urn:ietf:params:scim:api:messages:2.0:ListResponse'],
@@ -275,11 +275,11 @@ class AdminGroupProvisionController extends Controller
     /**
     * [createReturnData レスポンスデータ作成]
     *
-    * @param  object $groups [groupsテーブルオブジェクト]
+    * @param  Group $groups [groupsテーブルオブジェクト]
     *
     * @return array $return
     */
-    private function createReturnData(object $groups)
+    private function createReturnData(Group $groups)
     {
         $location = getenv('LOCATION_URL').'/Groups/'.$groups->scim_id;
         $return = [

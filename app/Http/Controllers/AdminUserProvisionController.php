@@ -57,8 +57,6 @@ class AdminUserProvisionController extends Controller
         }else{
             $users = $this->createUser($data);
         }
-        Log::debug('型');
-        Log::debug(gettype($users));
         
         return response()->json($this->createReturnData($users))
         ->setStatusCode(Response::HTTP_CREATED)
@@ -164,7 +162,7 @@ class AdminUserProvisionController extends Controller
     * [createUser ユーザー情報登録]
     * @param  array   $requestData [登録内容]
     * 
-    * @return object  $users       [usersテーブルオブジェクト]
+    * @return User  $users       [usersテーブルオブジェクト]
     */
     private function createUser(array $requestData){
         Log::debug('ユーザー情報登録内容');
@@ -194,7 +192,7 @@ class AdminUserProvisionController extends Controller
     * @param  array   $requestData [更新内容]
     * @param  string|null $scim_id [scim_id]
     * 
-    * @return object $users        [usersテーブルオブジェクト]
+    * @return User $users        [usersテーブルオブジェクト]
     */
     private function updateUser(array $requestData, ?string $scim_id = null)
     {
@@ -246,22 +244,22 @@ class AdminUserProvisionController extends Controller
     */
     private function scimError(?string $message = null, int $statusCode): JsonResponse
     {
-        return response()->json(
-            [
-                'schemas' => ["urn:ietf:params:scim:api:messages:2.0:Error"],
-                'detail' => $message ?? 'An error occured',
-                'status' => $statusCode,    
-            ])
-            ->setStatusCode($statusCode);
+        $return = [
+            'schemas' => ["urn:ietf:params:scim:api:messages:2.0:Error"],
+            'detail' => $message ?? 'An error occured',
+            'status' => $statusCode,    
+        ];
+        Log::debug($return);
+        return response()->json($return)->setStatusCode($statusCode);
     }
         
     /**
     * [createGetReturnData GETリクエスト用レスポンスデータ作成]
-    * @param  object|null $users [usersテーブルオブジェクト]
+    * @param  User|null $users [usersテーブルオブジェクト]
     * 
     * @return array $return
     */
-    private function createGetReturnData(?object $users = null)
+    private function createGetReturnData(?User $users = null)
     {
         $return = [
             'schemas' => ['urn:ietf:params:scim:api:messages:2.0:ListResponse'],
@@ -302,11 +300,11 @@ class AdminUserProvisionController extends Controller
     /**
     * [createReturnData レスポンスデータ作成]
     *
-    * @param  object $users [usersテーブルオブジェクト]
+    * @param  User $users [usersテーブルオブジェクト]
     *
     * @return array $return
     */
-    private function createReturnData(object $users)
+    private function createReturnData(User $users)
     {
         $location = getenv('LOCATION_URL').'/Users/'.$users->scim_id;
         $return = [
