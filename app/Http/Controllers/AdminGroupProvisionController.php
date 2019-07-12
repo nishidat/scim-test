@@ -34,7 +34,7 @@ class AdminGroupProvisionController extends Controller
         
         $get_group = new GetGroup();
         $groups_object = $get_group->getByGroupName( $group_name );
-        
+        Log::debug($groups_object);
         if( $groups_object === null )
         {
             $res_data = $this->createGetReturnData();
@@ -66,6 +66,7 @@ class AdminGroupProvisionController extends Controller
         $get_group = new GetGroup();
         $operation_group = new OperationGroup();
         $groups_object = $get_group->getByGroupName( $data['displayName'] );
+        Log::debug($groups_object);
         if( $groups_object === null ) 
         {
             $groups_new_object = $operation_group->update( $data );
@@ -90,6 +91,7 @@ class AdminGroupProvisionController extends Controller
     {
         $get_group = new GetGroup();
         $groups_object = $get_group->getByScimId( $scim_id );
+        Log::debug($groups_object);
         if( $groups_object === null ) 
         {
             return $this->scimError( 'リクエストされた scim_id（Group） は、存在しません。' );
