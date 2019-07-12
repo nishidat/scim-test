@@ -207,7 +207,7 @@ class AdminGroupProvisionController extends Controller
     * 
     * @return array      $return
     */
-    private function createGetReturnData( ?Group $groups = null )
+    private function createGetReturnData( ?Group $groups = null ): array
     {
         $return = 
         [
@@ -235,7 +235,7 @@ class AdminGroupProvisionController extends Controller
     *
     * @return array $return
     */
-    private function createReturnData(Group $groups)
+    private function createReturnData(Group $groups): array
     {
         $location = getenv( 'LOCATION_URL' ) . '/Groups/' . $groups->scim_id;
         $return = 

@@ -11,9 +11,9 @@ class GetUser
     * [getByEmail emailによるユーザー取得]
     * @param  string $email
     * 
-    * @return User
+    * @return User|null
     */
-    public function getByEmail( string $email ): User
+    public function getByEmail( string $email ): ?User
     {
         return User::where( 'email', $email )->first();
     }
@@ -22,9 +22,9 @@ class GetUser
     * [getByScimId scim_idによるユーザー取得]
     * @param  string $scim_id
     * 
-    * @return User
+    * @return User|null
     */
-    public function getByScimId( string $scim_id ): User
+    public function getByScimId( string $scim_id ): ?User
     {
         return User::where( 'scim_id', $scim_id )->first();
     }
