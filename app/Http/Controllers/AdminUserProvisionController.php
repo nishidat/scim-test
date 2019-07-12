@@ -26,17 +26,17 @@ class AdminUserProvisionController extends Controller
                 $users = User::where('email', str_replace('"', '', $matches[1]))->firstOrFail();
                 $res_data = $this->createGetReturnData($users);
             } catch (\Exception $e) {
-                Log::debug('内部DBにリクエストされたユーザーは見つかりません。');
+                Log::debug('リクエストされた email は、存在しません。');
                 $res_data = $this->createGetReturnData();
             }
         }else{
             // ヘルスチェックのため、正常ステータスで返却する
-            Log::debug('filterがリクエストされていません。');
+            Log::debug('filter がリクエストされていません。');
             $res_data = $this->createGetReturnData();
         }
         
-        return response()->json($res_data)
-        ->setStatusCode(Response::HTTP_OK)
+        return response()
+        ->json($res_data,Response::HTTP_OK)
         ->header('Content-Type', 'application/scim+json');
     }
     
@@ -50,7 +50,7 @@ class AdminUserProvisionController extends Controller
     {
         $data = $request->all();
         if (!isset($data['userName'])) {
-            return $this->scimError('User does not exist', Response::HTTP_NOT_FOUND);
+            return $this->scimError('userName がリクエストされていません。');
         }
         if (User::where('email', $data['userName'])->count() > 0) {
             $users = $this->updateUser($data);
@@ -58,8 +58,8 @@ class AdminUserProvisionController extends Controller
             $users = $this->createUser($data);
         }
         
-        return response()->json($this->createReturnData($users))
-        ->setStatusCode(Response::HTTP_CREATED)
+        return response()
+        ->json($this->createReturnData($users),Response::HTTP_CREATED)
         ->header('Content-Type', 'application/scim+json');
     }
     
@@ -75,11 +75,11 @@ class AdminUserProvisionController extends Controller
         try {
             $users = User::where('scim_id', $scim_id)->firstOrFail();
         } catch (\Exception $exception) {
-            return $this->scimError('User does not exist', Response::HTTP_NOT_FOUND);
+            return $this->scimError('リクエストされた scim_id（User） は、存在しません。');
         }
         
-        return response()->json($this->createReturnData($users))
-        ->setStatusCode(Response::HTTP_OK)
+        return response()
+        ->json($this->createReturnData($users),Response::HTTP_OK)
         ->header('Content-Type', 'application/scim+json');
     }
     
@@ -93,10 +93,10 @@ class AdminUserProvisionController extends Controller
     public function delete(Request $request, string $scim_id)
     {
         if (User::where('scim_id', $scim_id)->delete() < 0) {
-            return $this->scimError('User does not exist', Response::HTTP_NOT_FOUND);
+            return $this->scimError('リクエストされた scim_id（User） は、存在しません。');
         }
         
-        return response()->setStatusCode(Response::HTTP_NO_CONTENT);
+        return response('No body',Response::HTTP_NO_CONTENT);
     }
     
     /**
@@ -111,7 +111,7 @@ class AdminUserProvisionController extends Controller
         $data = $request->all();
         $updateDetail = array();
         if (!isset($data['Operations'])) {
-            return $this->scimError('User does not exist', Response::HTTP_NOT_FOUND);
+            return $this->scimError('Operations がリクエストされていません。');
         }
         try {
             $users = User::where('scim_id', $scim_id)->firstOrFail();
@@ -147,14 +147,14 @@ class AdminUserProvisionController extends Controller
                 }
                 $update_users = $this->updateUser($updateDetail,$scim_id);
             }else{
-                return $this->scimError('User does not exist', Response::HTTP_NOT_FOUND);
+                return $this->scimError('Operations が空です。');
             }
         } catch (\Exception $exception) {
-            return $this->scimError('User does not exist', Response::HTTP_NOT_FOUND);
+            return $this->scimError('リクエストされた scim_id（User） は、存在しません。');
         }
         
-        return response()->json($this->createReturnData($update_users))
-        ->setStatusCode(Response::HTTP_OK)
+        return response()
+        ->json($this->createReturnData($update_users),Response::HTTP_OK)
         ->header('Content-Type', 'application/scim+json');
     }
     
@@ -205,11 +205,11 @@ class AdminUserProvisionController extends Controller
                 if (isset($requestData['userName'])) {
                     $users = User::where('email', $requestData['userName'])->firstOrFail();
                 }else{
-                    return $this->scimError('User does not exist', Response::HTTP_NOT_FOUND);
+                    return $this->scimError('userName がリクエストされていません。');
                 }
             }
         } catch (\Exception $exception) {
-            return $this->scimError('User does not exist', Response::HTTP_NOT_FOUND);
+            return $this->scimError('リクエストされた scim_id（User） は、存在しません。');
         }
         if (isset($requestData['active'])) {
             $users->active = $requestData['active'];
@@ -238,19 +238,20 @@ class AdminUserProvisionController extends Controller
     * Returns a SCIM-formatted error message
     *
     * @param string|null $message
-    * @param int $statusCode
     *
     * @return JsonResponse
     */
-    private function scimError(?string $message = null, int $statusCode): JsonResponse
+    private function scimError(?string $message = null): JsonResponse
     {
         $return = [
             'schemas' => ["urn:ietf:params:scim:api:messages:2.0:Error"],
             'detail' => $message ?? 'An error occured',
             'status' => $statusCode,    
         ];
+        Log::debug('============Response Start============');
         Log::debug($return);
-        return response()->json($return)->setStatusCode($statusCode);
+        Log::debug('============Response End============');
+        return response()->json($return,Response::HTTP_NOT_FOUND);
     }
         
     /**

@@ -26,17 +26,17 @@ class AdminGroupProvisionController extends Controller
                 $groups = Group::where('group_name', str_replace('"', '', $matches[1]))->firstOrFail();
                 $res_data = $this->createGetReturnData($groups);
             } catch (\Exception $e) {
-                Log::debug('内部DBにリクエストされたグループは見つかりません。');
+                Log::debug('リクエストされた displayName は、存在しません。');
                 $res_data = $this->createGetReturnData();
             }
         }else{
             // ヘルスチェックのため、正常ステータスで返却する
-            Log::debug('filterがリクエストされていません。');
+            Log::debug('filter がリクエストされていません。');
             $res_data = $this->createGetReturnData();
         }
         
-        return response()->json($res_data)
-        ->setStatusCode(Response::HTTP_OK)
+        return response()
+        ->json($res_data,Response::HTTP_OK)
         ->header('Content-Type', 'application/scim+json');
     }
     
@@ -50,7 +50,7 @@ class AdminGroupProvisionController extends Controller
     {
         $data = $request->all();
         if (!isset($data['displayName'])) {
-            return $this->scimError('User does not exist', Response::HTTP_NOT_FOUND);
+            return $this->scimError('displayName がリクエストされていません。');
         }
         if (Group::where('group_name', $data['displayName'])->count() > 0) {
             $groups = $this->updateGroup($data);
@@ -58,8 +58,8 @@ class AdminGroupProvisionController extends Controller
             $groups = $this->createGroup($data);
         }
         
-        return response()->json($this->createReturnData($groups))
-        ->setStatusCode(Response::HTTP_CREATED)
+        return response()
+        ->json($this->createReturnData($groups),Response::HTTP_CREATED)
         ->header('Content-Type', 'application/scim+json');
     }
     
@@ -74,11 +74,11 @@ class AdminGroupProvisionController extends Controller
         try {
             $groups = Group::where('scim_id', $scim_id)->firstOrFail();
         } catch (\Exception $exception) {
-            return $this->scimError('User does not exist', Response::HTTP_NOT_FOUND);
+            return $this->scimError('リクエストされた scim_id（Group） は、存在しません。');
         }
         
-        return response()->json($this->createReturnData($groups))
-        ->setStatusCode(Response::HTTP_OK)
+        return response()
+        ->json($this->createReturnData($groups),Response::HTTP_OK)
         ->header('Content-Type', 'application/scim+json');
     }
     
@@ -91,10 +91,10 @@ class AdminGroupProvisionController extends Controller
     public function delete(Request $request, string $email)
     {
         if (Group::where('scim_id', $scim_id)->delete() < 0) {
-            return $this->scimError('User does not exist', Response::HTTP_NOT_FOUND);
+            return $this->scimError('リクエストされた scim_id（Group） は、存在しません。');
         }
         
-        return response()->setStatusCode(Response::HTTP_NO_CONTENT);
+        return response('No body',Response::HTTP_NO_CONTENT);
     }
     
     /**
@@ -109,7 +109,7 @@ class AdminGroupProvisionController extends Controller
         $data = $request->all();
         $updateDetail = array();
         if (!isset($data['Operations'])) {
-            return $this->scimError('User does not exist', Response::HTTP_NOT_FOUND);
+            return $this->scimError('Operations がリクエストされていません。');
         }
         try {
             if ($data['Operations']) {
@@ -127,14 +127,14 @@ class AdminGroupProvisionController extends Controller
                                 try {
                                     $groups = Group::where('scim_id', $scim_id)->firstOrFail();
                                 } catch (\Exception $exception) {
-                                    return $this->scimError('User does not exist', Response::HTTP_NOT_FOUND);
+                                    return $this->scimError('リクエストされた scim_id（Group） は、存在しません。');
                                 }
                                 try {
                                     $users = User::where('scim_id', $value['value'][0]['value'])->firstOrFail();
                                     $users->group_id = $groups->id;
                                     $users->save();
                                 } catch (\Exception $exception) {
-                                    return $this->scimError('User does not exist', Response::HTTP_NOT_FOUND);
+                                    return $this->scimError('リクエストされた scim_id（User） は、存在しません。');
                                 }
                             }
                             break;
@@ -144,14 +144,14 @@ class AdminGroupProvisionController extends Controller
                                 try {
                                     $groups = Group::where('scim_id', $scim_id)->firstOrFail();
                                 } catch (\Exception $exception) {
-                                    return $this->scimError('User does not exist', Response::HTTP_NOT_FOUND);
+                                    return $this->scimError('リクエストされた scim_id（Group） は、存在しません。');
                                 }
                                 try {
                                     $users = User::where('scim_id', $value['value'][0]['value'])->firstOrFail();
                                     $users->group_id = "";
                                     $users->save();
                                 } catch (\Exception $exception) {
-                                    return $this->scimError('User does not exist', Response::HTTP_NOT_FOUND);
+                                    return $this->scimError('リクエストされた scim_id（User） は、存在しません。');
                                 }
                             }
                             break;
@@ -162,13 +162,13 @@ class AdminGroupProvisionController extends Controller
                     continue;
                 }
             }else{
-                return $this->scimError('User does not exist', Response::HTTP_NOT_FOUND);
+                return $this->scimError('Operations が空です。');
             }
         } catch (\Exception $exception) {
-            return $this->scimError('User does not exist', Response::HTTP_NOT_FOUND);
+            return $this->scimError();
         }
         
-        return response()->setStatusCode(Response::HTTP_NO_CONTENT);
+        return response('No body',Response::HTTP_NO_CONTENT);
     }
     /**
     * [createGroup グループ情報登録]
@@ -207,11 +207,11 @@ class AdminGroupProvisionController extends Controller
                 if (isset($requestData['displayName'])) {
                     $groups = Group::where('group_name', $requestData['displayName'])->firstOrFail();
                 }else{
-                    return $this->scimError('User does not exist', Response::HTTP_NOT_FOUND);
+                    return $this->scimError('displayName がリクエストされていません。');
                 }
             }
         } catch (\Exception $exception) {
-            return $this->scimError('User does not exist', Response::HTTP_NOT_FOUND);
+            return $this->scimError('リクエストされた scim_id（Group） は、存在しません。');
         }
         if (isset($requestData['displayName'])) {
             $groups->group_name = $requestData['displayName'];
@@ -225,11 +225,10 @@ class AdminGroupProvisionController extends Controller
     * Returns a SCIM-formatted error message
     *
     * @param string|null $message
-    * @param int $statusCode
     *
     * @return JsonResponse
     */
-    private function scimError(?string $message = null, int $statusCode): JsonResponse
+    private function scimError(?string $message = null): JsonResponse
     {
         $return = [
             'schemas' => ["urn:ietf:params:scim:api:messages:2.0:Error"],
@@ -239,7 +238,7 @@ class AdminGroupProvisionController extends Controller
         Log::debug('============Response Start============');
         Log::debug($return);
         Log::debug('============Response End============');
-        return response()->json($return)->setStatusCode($statusCode);
+        return response()->json($return,Response::HTTP_NOT_FOUND);
     }
     
     /**
