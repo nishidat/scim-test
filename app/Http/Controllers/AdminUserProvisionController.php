@@ -34,7 +34,7 @@ class AdminUserProvisionController extends Controller
         
         $get_user = new GetUser();
         $users_object = $get_user->getByEmail( $email );
-        if( !$users_object ) 
+        if( $users_object === null ) 
         {
             $res_data = $this->createGetReturnData();
         }
@@ -65,7 +65,7 @@ class AdminUserProvisionController extends Controller
         $get_user = new GetUser();
         $operation_user = new OperationUser();
         $users_object = $get_user->getByEmail( $data['userName'] );
-        if( !$users_object ) 
+        if( $users_object === null ) 
         {
             $users_new_object = $operation_user->update( $data );
         }
@@ -90,7 +90,7 @@ class AdminUserProvisionController extends Controller
     {
         $get_user = new GetUser();
         $users_object = $get_user->getByScimId( $scim_id );
-        if( !$users_object ) 
+        if( $users_object === null ) 
         {
             return $this->scimError( 'リクエストされた scim_id（User） は、存在しません。' );
         }
@@ -136,7 +136,7 @@ class AdminUserProvisionController extends Controller
         
         $get_user = new GetUser();
         $users_object = $get_user->getByScimId( $scim_id );
-        if( !$users_object ) 
+        if( $users_object === null ) 
         {
             return $this->scimError( 'リクエストされた scim_id（User） は、存在しません。' );
         }

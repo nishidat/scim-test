@@ -11,9 +11,9 @@ class GetGroup
     * [getByGroupName group_nameによるグループ取得]
     * @param  string $group_name
     * 
-    * @return Group
+    * @return Group|null
     */
-    public function getByGroupName( string $group_name ): Group
+    public function getByGroupName( string $group_name ): ?Group
     {
         return Group::where( 'group_name', $group_name )->first();
     }
@@ -22,9 +22,9 @@ class GetGroup
     * [getByScimId scim_idによるグループ取得]
     * @param  string $scim_id
     * 
-    * @return Group
+    * @return Group|null
     */
-    public function getByScimId( string $scim_id ): Group
+    public function getByScimId( string $scim_id ): ?Group
     {
         return Group::where( 'scim_id', $scim_id )->first();
     }
