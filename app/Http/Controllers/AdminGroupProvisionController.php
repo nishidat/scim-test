@@ -129,12 +129,12 @@ class AdminGroupProvisionController extends Controller
                                 } catch (\Exception $exception) {
                                     return $this->scimError('User does not exist', Response::HTTP_NOT_FOUND);
                                 }
-                                $users = User::where('email', $value['value']['value']);
+                                $users = User::where('email', $value['value'][0]['value']);
                                 if (isset($users)) {
                                     $users->group_id = $groups->id;
                                 }else{
                                     try {
-                                        $users = User::where('scim_id', $value['value']['value'])->firstOrFail();
+                                        $users = User::where('scim_id', $value['value'][0]['value'])->firstOrFail();
                                     } catch (\Exception $exception) {
                                         return $this->scimError('User does not exist', Response::HTTP_NOT_FOUND);
                                     }
@@ -151,12 +151,12 @@ class AdminGroupProvisionController extends Controller
                                 } catch (\Exception $exception) {
                                     return $this->scimError('User does not exist', Response::HTTP_NOT_FOUND);
                                 }
-                                $users = User::where('email', $value['value']['value']);
+                                $users = User::where('email', $value['value'][0]['value']);
                                 if (isset($users)) {
                                     $users->group_id = "";
                                 }else{
                                     try {
-                                        $users = User::where('scim_id', $value['value']['value'])->firstOrFail();
+                                        $users = User::where('scim_id', $value['value'][0]['value'])->firstOrFail();
                                     } catch (\Exception $exception) {
                                         return $this->scimError('User does not exist', Response::HTTP_NOT_FOUND);
                                     }
