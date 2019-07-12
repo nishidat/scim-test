@@ -129,18 +129,13 @@ class AdminGroupProvisionController extends Controller
                                 } catch (\Exception $exception) {
                                     return $this->scimError('User does not exist', Response::HTTP_NOT_FOUND);
                                 }
-                                $users = User::where('email', $value['value'][0]['value']);
-                                if (isset($users)) {
+                                try {
+                                    $users = User::where('scim_id', $value['value'][0]['value'])->firstOrFail();
                                     $users->group_id = $groups->id;
-                                }else{
-                                    try {
-                                        $users = User::where('scim_id', $value['value'][0]['value'])->firstOrFail();
-                                    } catch (\Exception $exception) {
-                                        return $this->scimError('User does not exist', Response::HTTP_NOT_FOUND);
-                                    }
-                                    $users->group_id = $groups->id;
+                                    $users->save();
+                                } catch (\Exception $exception) {
+                                    return $this->scimError('User does not exist', Response::HTTP_NOT_FOUND);
                                 }
-                                $users->save();
                             }
                             break;
                             
@@ -151,18 +146,13 @@ class AdminGroupProvisionController extends Controller
                                 } catch (\Exception $exception) {
                                     return $this->scimError('User does not exist', Response::HTTP_NOT_FOUND);
                                 }
-                                $users = User::where('email', $value['value'][0]['value']);
-                                if (isset($users)) {
+                                try {
+                                    $users = User::where('scim_id', $value['value'][0]['value'])->firstOrFail();
                                     $users->group_id = "";
-                                }else{
-                                    try {
-                                        $users = User::where('scim_id', $value['value'][0]['value'])->firstOrFail();
-                                    } catch (\Exception $exception) {
-                                        return $this->scimError('User does not exist', Response::HTTP_NOT_FOUND);
-                                    }
-                                    $users->group_id = "";
+                                    $users->save();
+                                } catch (\Exception $exception) {
+                                    return $this->scimError('User does not exist', Response::HTTP_NOT_FOUND);
                                 }
-                                $users->save();
                             }
                             break;
                         
@@ -246,7 +236,9 @@ class AdminGroupProvisionController extends Controller
             'detail' => $message ?? 'An error occured',
             'status' => $statusCode,    
         ];
+        Log::debug('============Response Start============');
         Log::debug($return);
+        Log::debug('============Response End============');
         return response()->json($return)->setStatusCode($statusCode);
     }
     
@@ -268,7 +260,9 @@ class AdminGroupProvisionController extends Controller
         }else{
             $return['totalResults'] = 0;
         }
+        Log::debug('============Response Start============');
         Log::debug($return);
+        Log::debug('============Response End============');
         return $return;
     }
     
@@ -294,7 +288,9 @@ class AdminGroupProvisionController extends Controller
             ],
             'displayName' => $groups->group_name,
         ];
+        Log::debug('============Response Start============');
         Log::debug($return);
+        Log::debug('============Response End============');
         return $return;
     }
 }
