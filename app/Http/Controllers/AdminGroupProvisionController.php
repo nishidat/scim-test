@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\User;
-use App\Group;
+use App\User\OperationUser;
+use App\Group\OperationGroup;
+use App\Group\GetGroup;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Symfony\Component\HttpFoundation\Response;
 use Log;
 
@@ -18,26 +18,35 @@ class AdminGroupProvisionController extends Controller
     * 
     * @return JsonResponse
     */
-    public function index(Request $request)
+    public function index( Request $request )
     {
-        $filter = $request->get('filter');
-        if ($filter && preg_match('/displayName eq (.*)/i', $filter, $matches)) {
-            try {
-                $groups = Group::where('group_name', str_replace('"', '', $matches[1]))->firstOrFail();
-                $res_data = $this->createGetReturnData($groups);
-            } catch (\Exception $e) {
-                Log::debug('リクエストされた displayName は、存在しません。');
-                $res_data = $this->createGetReturnData();
-            }
-        }else{
-            // ヘルスチェックのため、正常ステータスで返却する
-            Log::debug('filter がリクエストされていません。');
+        if ( !$request->filled( 'filter' ) ) 
+        {
+            return $this->scimError( 'filter がリクエストされていません。' );
+        }
+        $filter = $request->get( 'filter' );
+        
+        if ( !preg_match( '/displayName eq (.*)/i', $filter, $matches ) )
+        {
+            return $this->scimError( 'filter の形式が正しくありません。' );
+        }
+        $group_name = str_replace( '"', '', $matches[1] );
+        
+        $get_group = new GetGroup();
+        $groups_object = $get_group->getByGroupName( $group_name );
+        
+        if( !$groups_object )
+        {
             $res_data = $this->createGetReturnData();
+        }
+        else
+        {
+            $res_data = $this->createGetReturnData( $groups_object );
         }
         
         return response()
-        ->json($res_data,Response::HTTP_OK)
-        ->header('Content-Type', 'application/scim+json');
+            ->json( $res_data, Response::HTTP_OK )
+            ->header( 'Content-Type', 'application/scim+json' );
     }
     
     /**
@@ -46,21 +55,29 @@ class AdminGroupProvisionController extends Controller
     * 
     * @return JsonResponse
     */
-    public function store(Request $request)
+    public function store( Request $request )
     {
         $data = $request->all();
-        if (!isset($data['displayName'])) {
-            return $this->scimError('displayName がリクエストされていません。');
+        if ( !isset( $data['displayName'] ) ) 
+        {
+            return $this->scimError( 'displayName がリクエストされていません。' );
         }
-        if (Group::where('group_name', $data['displayName'])->count() > 0) {
-            $groups = $this->updateGroup($data);
-        }else{
-            $groups = $this->createGroup($data);
+        
+        $get_group = new GetGroup();
+        $operation_group = new OperationGroup();
+        $groups_object = $get_group->getByGroupName( $data['displayName'] );
+        if( !$groups_object ) 
+        {
+            $groups_new_object = $operation_group->update( $data );
+        }
+        else
+        {
+            $groups_new_object = $operation_group->create( $data );
         }
         
         return response()
-        ->json($this->createReturnData($groups),Response::HTTP_CREATED)
-        ->header('Content-Type', 'application/scim+json');
+            ->json( $this->createReturnData( $groups_new_object ), Response::HTTP_CREATED )
+            ->header( 'Content-Type', 'application/scim+json' );
     }
     
     /**
@@ -69,17 +86,18 @@ class AdminGroupProvisionController extends Controller
     * 
     * @return JsonResponse
     */
-    public function show(Request $request, string $scim_id)
+    public function show( Request $request, string $scim_id )
     {
-        try {
-            $groups = Group::where('scim_id', $scim_id)->firstOrFail();
-        } catch (\Exception $exception) {
-            return $this->scimError('リクエストされた scim_id（Group） は、存在しません。');
+        $get_group = new GetGroup();
+        $groups_object = $get_group->getByScimId( $scim_id );
+        if( !$groups_object ) 
+        {
+            return $this->scimError( 'リクエストされた scim_id（Group） は、存在しません。' );
         }
         
         return response()
-        ->json($this->createReturnData($groups),Response::HTTP_OK)
-        ->header('Content-Type', 'application/scim+json');
+            ->json( $this->createReturnData( $groups_object ), Response::HTTP_OK )
+            ->header( 'Content-Type', 'application/scim+json' );
     }
     
     /**
@@ -88,13 +106,15 @@ class AdminGroupProvisionController extends Controller
     * 
     * @return JsonResponse
     */
-    public function delete(Request $request, string $email)
+    public function delete( Request $request, string $scim_id )
     {
-        if (Group::where('scim_id', $scim_id)->delete() < 0) {
-            return $this->scimError('リクエストされた scim_id（Group） は、存在しません。');
+        $operation_group = new OperationGroup();
+        if ( !$operation_group->deleteUserByScimId( $scim_id ) )
+        {
+            return $this->scimError( 'リクエストされた scim_id（Group） は、存在しません。' );
         }
         
-        return response('No body',Response::HTTP_NO_CONTENT);
+        return response( 'No body', Response::HTTP_NO_CONTENT );
     }
     
     /**
@@ -104,157 +124,99 @@ class AdminGroupProvisionController extends Controller
     * 
     * @return JsonResponse
     */
-    public function update(Request $request, string $scim_id)
+    public function update( Request $request, string $scim_id )
     {
         $data = $request->all();
-        $updateDetail = array();
-        if (!isset($data['Operations'])) {
-            return $this->scimError('Operations がリクエストされていません。');
-        }
-        try {
-            if ($data['Operations']) {
-                foreach ($data['Operations'] as $key => $value) {
-                    switch ($value['op']) {
-                        case 'Replace':
-                            if(strpos($value['path'],'displayName') !== false){
-                                $updateDetail['displayName'] = $value['value'];
-                                $this->updateGroup($updateDetail,$scim_id);
-                            }
-                            break;
-                            
-                        case 'Add':
-                            if(strpos($value['path'],'members') !== false){
-                                try {
-                                    $groups = Group::where('scim_id', $scim_id)->firstOrFail();
-                                } catch (\Exception $exception) {
-                                    return $this->scimError('リクエストされた scim_id（Group） は、存在しません。');
-                                }
-                                try {
-                                    $users = User::where('scim_id', $value['value'][0]['value'])->firstOrFail();
-                                    $users->group_id = $groups->id;
-                                    $users->save();
-                                } catch (\Exception $exception) {
-                                    return $this->scimError('リクエストされた scim_id（User） は、存在しません。');
-                                }
-                            }
-                            break;
-                            
-                        case 'Remove':
-                            if(strpos($value['path'],'members') !== false){
-                                try {
-                                    $groups = Group::where('scim_id', $scim_id)->firstOrFail();
-                                } catch (\Exception $exception) {
-                                    return $this->scimError('リクエストされた scim_id（Group） は、存在しません。');
-                                }
-                                try {
-                                    $users = User::where('scim_id', $value['value'][0]['value'])->firstOrFail();
-                                    $users->group_id = "";
-                                    $users->save();
-                                } catch (\Exception $exception) {
-                                    return $this->scimError('リクエストされた scim_id（User） は、存在しません。');
-                                }
-                            }
-                            break;
-                        
-                        default:
-                            continue;
-                    }
-                    continue;
-                }
-            }else{
-                return $this->scimError('Operations が空です。');
-            }
-        } catch (\Exception $exception) {
-            return $this->scimError();
+        $update_detail = array();
+        if ( !isset( $data['Operations'] ) ) 
+        {
+            return $this->scimError( 'Operations がリクエストされていません。' );
         }
         
-        return response('No body',Response::HTTP_NO_CONTENT);
-    }
-    /**
-    * [createGroup グループ情報登録]
-    * @param  array   $requestData [登録内容]
-    * 
-    * @return Group $groups        [groupsテーブルオブジェクト]
-    */
-    private function createGroup(array $requestData){
-        Log::debug('グループ情報登録内容');
-        Log::debug($requestData);
-        $scim_id = hash('ripemd160', $requestData['externalId']);
-        $groups = Group::create([
-            'scim_id' => $scim_id,
-            'external_id' => $requestData['externalId'],
-            'group_name' => $requestData['displayName'],
-        ]);
-        Log::debug('グループ情報登録完了');
-        return $groups;
-    }
-    
-    /**
-    * [updateGroup グループ情報更新]
-    * @param  array   $requestData [更新内容]
-    * @param  string|null $scim_id [scim_id]
-    * 
-    * @return Group $groups        [groupsテーブルオブジェクト]
-    */
-    private function updateGroup(array $requestData, ?string $scim_id = null)
-    {
-        Log::debug('グループ情報更新内容');
-        Log::debug($requestData);
-        try {
-            if (!empty($scim_id)) {
-                $groups = Group::where('scim_id', $scim_id)->firstOrFail();
-            }else{
-                if (isset($requestData['displayName'])) {
-                    $groups = Group::where('group_name', $requestData['displayName'])->firstOrFail();
-                }else{
-                    return $this->scimError('displayName がリクエストされていません。');
-                }
+        $get_group = new GetGroup();
+        $groups_object = $get_group->getByScimId( $scim_id );
+        if( !$groups_object ) 
+        {
+            return $this->scimError( 'リクエストされた scim_id（Group） は、存在しません。' );
+        }
+        
+        foreach ( $data['Operations'] as $key => $value ) 
+        {
+            switch ( $value['op'] ) 
+            {
+                case 'Replace':
+                    if( strpos( $value['path'],'displayName' ) !== false )
+                    {
+                        $update_detail['displayName'] = $value['value'];
+                        $operation_group = new OperationGroup();
+                        $operation_group->update( $data, $scim_id );
+                    }
+                    break;
+                    
+                case 'Add':
+                    if( strpos( $value['path'], 'members' ) !== false )
+                    {
+                        $update_detail['groupId'] = $get_group->id;
+                        $operation_user = new OperationUser();
+                        $operation_user->update( $update_detail, $value['value'][0]['value'] );
+                    }
+                    break;
+                    
+                case 'Remove':
+                    if( strpos( $value['path'], 'members' ) !== false )
+                    {
+                        $update_detail['groupId'] = null;
+                        $operation_user = new OperationUser();
+                        $operation_user->update( $update_detail, $value['value'][0]['value'] );
+                    }
+                    break;
+                
+                default:
+                    break;
             }
-        } catch (\Exception $exception) {
-            return $this->scimError('リクエストされた scim_id（Group） は、存在しません。');
+            continue;
         }
-        if (isset($requestData['displayName'])) {
-            $groups->group_name = $requestData['displayName'];
-        }
-        $groups->save();
-        Log::debug('グループ情報更新完了');
-        return $groups;
+        
+        return response( 'No body', Response::HTTP_NO_CONTENT );
     }
     
     /**
-    * Returns a SCIM-formatted error message
-    *
+    * [scimError エラーレスポンス]
     * @param string|null $message
     *
     * @return JsonResponse
     */
     private function scimError(?string $message = null): JsonResponse
     {
-        $return = [
+        $return = 
+        [
             'schemas' => ["urn:ietf:params:scim:api:messages:2.0:Error"],
             'detail' => $message ?? 'An error occured',
             'status' => $statusCode,    
         ];
-        Log::debug('============Response Start============');
-        Log::debug($return);
-        Log::debug('============Response End============');
-        return response()->json($return,Response::HTTP_NOT_FOUND);
+        Log::debug( '============Response Start============' );
+        Log::debug( $return );
+        Log::debug( '============Response End============' );
+        
+        return response()->json( $return, Response::HTTP_NOT_FOUND );
     }
     
     /**
     * [createGetReturnData GETリクエスト用レスポンスデータ作成]
     * @param  Group|null $groups [groupsテーブルオブジェクト]
     * 
-    * @return array $return
+    * @return array      $return
     */
-    private function createGetReturnData(?Group $groups = null)
+    private function createGetReturnData( ?Group $groups = null )
     {
-        $return = [
+        $return = 
+        [
             'schemas' => ['urn:ietf:params:scim:api:messages:2.0:ListResponse'],
             'startIndex' => 1,
             'itemsPerPage' => 20
         ];
-        if (isset($groups) && $groups->count() > 0) {
+        if ( isset( $groups ) && $groups->count() > 0) 
+        {
             $return['totalResults'] = $groups->count();
         }else{
             $return['totalResults'] = 0;
@@ -262,6 +224,7 @@ class AdminGroupProvisionController extends Controller
         Log::debug('============Response Start============');
         Log::debug($return);
         Log::debug('============Response End============');
+        
         return $return;
     }
     
@@ -274,8 +237,9 @@ class AdminGroupProvisionController extends Controller
     */
     private function createReturnData(Group $groups)
     {
-        $location = getenv('LOCATION_URL').'/Groups/'.$groups->scim_id;
-        $return = [
+        $location = getenv( 'LOCATION_URL' ) . '/Groups/' . $groups->scim_id;
+        $return = 
+        [
             'schemas' => ['urn:ietf:params:scim:schemas:core:2.0:User'],
             'id' => $groups->scim_id,
             'externalId' => $groups->external_id,
@@ -290,6 +254,7 @@ class AdminGroupProvisionController extends Controller
         Log::debug('============Response Start============');
         Log::debug($return);
         Log::debug('============Response End============');
+        
         return $return;
     }
 }
