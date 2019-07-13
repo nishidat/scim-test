@@ -19,7 +19,7 @@ class Group extends Model
    * @var array
    */
   protected $fillable = [
-      'scim_id','external_id', 'group_name'
+      'scim_id', 'external_id', 'group_name'
   ];
 
 }

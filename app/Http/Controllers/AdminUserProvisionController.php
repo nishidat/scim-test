@@ -68,11 +68,11 @@ class AdminUserProvisionController extends Controller
         $users_object = $get_user->getByEmail( $data['userName'] );
         if( $users_object === null ) 
         {
-            $users_new_object = $operation_user->update( $data );
+            $users_new_object = $operation_user->create( $data );
         }
         else
         {
-            $users_new_object = $operation_user->create( $data );
+            $users_new_object = $operation_user->update( $data );
         }
         
         return response()
@@ -199,7 +199,7 @@ class AdminUserProvisionController extends Controller
         [
             'schemas' => ["urn:ietf:params:scim:api:messages:2.0:Error"],
             'detail' => $message ?? 'An error occured',
-            'status' => $statusCode,    
+            'status' => Response::HTTP_NOT_FOUND,    
         ];
         Log::debug( '============Response Start============' );
         Log::debug( $return );

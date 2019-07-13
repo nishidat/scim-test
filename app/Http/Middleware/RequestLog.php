@@ -14,11 +14,12 @@ class RequestLog
      * @param  \Closure  $next
      * @return mixed
      */
-    public function handle($request, Closure $next)
+    public function handle( $request, Closure $next )
     {
-        Log::debug('============Request '.$request->method().' '.$request->path().' Start=============');
-        Log::debug($request->all());
-        Log::debug('============Request '.$request->method().' '.$request->path().' End=============');
-        return $next($request);
+        Log::debug( '============Request ' . $request->method() . ' ' . $request->path() . ' Start=============' );
+        Log::debug( $request->all() );
+        Log::debug( '============Request ' . $request->method() . ' ' . $request->path() . ' End=============' );
+        
+        return $next( $request );
     }
 }
