@@ -91,6 +91,7 @@ class AdminGroupProvisionController extends Controller
     {
         $get_group = new GetGroup();
         $groups_object = $get_group->getByScimId( $scim_id );
+        Log::debug('objects');
         Log::debug($groups_object);
         if( $groups_object === null ) 
         {

@@ -26,6 +26,7 @@ class GetGroup
     */
     public function getByScimId( string $scim_id ): ?Group
     {
+        Log::debug($scim_id);
         return Group::where( 'scim_id', $scim_id )->first();
     }
 }
