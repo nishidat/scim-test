@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\User\OperationUser;
 use App\User\GetUser;
+use App\Model\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
