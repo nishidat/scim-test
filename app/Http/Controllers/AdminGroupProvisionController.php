@@ -156,7 +156,7 @@ class AdminGroupProvisionController extends Controller
                 case 'Add':
                     if( strpos( $value['path'], 'members' ) !== false )
                     {
-                        $update_detail['groupId'] = $get_group->id;
+                        $update_detail['groupId'] = $groups_object->id;
                         $operation_user = new OperationUser();
                         $operation_user->update( $update_detail, $value['value'][0]['value'] );
                     }
