@@ -6,6 +6,7 @@ use App\Model\User;
 use App\Api\ApiClient;
 use Illuminate\Support\Facades\Hash;
 use Log;
+use DB;
 
 class OperationUser
 {
