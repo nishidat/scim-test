@@ -23,35 +23,44 @@ class ApiClient
      */
     public function createUser( array $data ): bool
     {
-        Log::debug( 'APIリクエスト' );
-        $client = new \GuzzleHttp\Client();
-        $response = $client->request( 'POST', self::HOST_URL, 
-            [
-                'headers' => $this->headers,
-                'json' => 
+        try 
+        {
+            Log::debug( 'APIリクエスト' );
+            $client = new \GuzzleHttp\Client();
+            $response = $client->request( 'POST', self::HOST_URL, 
                 [
-                    'request-data'=> 
+                    'headers' => $this->headers,
+                    'json' => 
                     [
-                        'userName' => $data['userName'],
-                        'name' => $data['name']['formatted'],
-                        'tenantId' => $data['tenant_id'],
+                        'request-data'=> 
+                        [
+                            'userName' => $data['userName'],
+                            'name' => $data['name']['formatted'],
+                            'tenantId' => $data['tenant_id'],
+                        ]
                     ]
                 ]
-            ]
-        );
-        if ( $response->getStatusCode() != SUCCESS_HTTP_STATUS ) 
+            );
+            if ( $response->getStatusCode() != SUCCESS_HTTP_STATUS ) 
+            {
+                Log::debug( 'API HTTPステータスコード不正：' . $response->getStatusCode() );
+                return false;
+            }
+            $response_body = json_decode( $response->getBody(), true );
+            if ( $response_body['status'] != SUCCESS ) 
+            {
+                Log::debug( 'API レスポンス不正：' . $response_body );
+                return false;
+            }
+            
+            return true;
+        } 
+        catch (\Exception $e) 
         {
-            Log::debug( 'API HTTPステータスコード不正：' . $response->getStatusCode() );
+            Log::debug( 'API処理で問題が発生しました。' );
+            Log::debug( $e->getMessage() );
             return false;
         }
-        $response_body = json_decode( $response->getBody(), true );
-        if ( $response_body['status'] != SUCCESS ) 
-        {
-            Log::debug( 'API レスポンス不正：' . $response_body );
-            return false;
-        }
-        
-        return true;
     }
     
     /**
@@ -62,36 +71,45 @@ class ApiClient
      */
     public function updateUser( array $data ): bool
     {
-        Log::debug( 'APIリクエスト' );
-        $client = new \GuzzleHttp\Client();
-        $response = $client->request( 'PUT', self::HOST_URL, 
-            [
-                'headers' => $this->headers,
-                'json' => 
+        try 
+        {
+            Log::debug( 'APIリクエスト' );
+            $client = new \GuzzleHttp\Client();
+            $response = $client->request( 'PUT', self::HOST_URL, 
                 [
-                    'request-data'=> 
+                    'headers' => $this->headers,
+                    'json' => 
                     [
-                        'userName' => $data['olduserName'],
-                        'newUserName' => $data['userName'],
-                        'name' => $data['name']['formatted'],
-                        'tenantId' => $data['tenant_id'],
+                        'request-data'=> 
+                        [
+                            'userName' => $data['olduserName'],
+                            'newUserName' => $data['userName'],
+                            'name' => $data['name']['formatted'],
+                            'tenantId' => $data['tenant_id'],
+                        ]
                     ]
                 ]
-            ]
-        );
-        if ( $response->getStatusCode() != SUCCESS_HTTP_STATUS ) 
+            );
+            if ( $response->getStatusCode() != SUCCESS_HTTP_STATUS ) 
+            {
+                Log::debug( 'API HTTPステータスコード不正：' . $response->getStatusCode() );
+                return false;
+            }
+            $response_body = json_decode( $response->getBody(), true );
+            if ( $response_body['status'] != SUCCESS ) 
+            {
+                Log::debug( 'API レスポンス不正：' . $response_body );
+                return false;
+            }
+            
+            return true;
+        } 
+        catch (\Exception $e) 
         {
-            Log::debug( 'API HTTPステータスコード不正：' . $response->getStatusCode() );
+            Log::debug( 'API処理で問題が発生しました。' );
+            Log::debug( $e->getMessage() );
             return false;
         }
-        $response_body = json_decode( $response->getBody(), true );
-        if ( $response_body['status'] != SUCCESS ) 
-        {
-            Log::debug( 'API レスポンス不正：' . $response_body );
-            return false;
-        }
-        
-        return true;
     }
     
     /**
@@ -102,33 +120,42 @@ class ApiClient
      */
     public function deleteUser( string $userName, string $tenant_id ): bool
     {
-        Log::debug( 'APIリクエスト' );
-        $client = new \GuzzleHttp\Client();
-        $response = $client->request( 'DELETE', self::HOST_URL, 
-            [
-                'headers' => $this->headers,
-                'json' => 
+        try 
+        {
+            Log::debug( 'APIリクエスト' );
+            $client = new \GuzzleHttp\Client();
+            $response = $client->request( 'DELETE', self::HOST_URL, 
                 [
-                    'request-data'=> 
+                    'headers' => $this->headers,
+                    'json' => 
                     [
-                        'userName' => $userName,
-                        'tenantId' => $tenant_id,
+                        'request-data'=> 
+                        [
+                            'userName' => $userName,
+                            'tenantId' => $tenant_id,
+                        ]
                     ]
                 ]
-            ]
-        );
-        if ( $response->getStatusCode() != SUCCESS_HTTP_STATUS ) 
+            );
+            if ( $response->getStatusCode() != SUCCESS_HTTP_STATUS ) 
+            {
+                Log::debug( 'API HTTPステータスコード不正：' . $response->getStatusCode() );
+                return false;
+            }
+            $response_body = json_decode( $response->getBody(), true );
+            if ( $response_body['status'] != SUCCESS ) 
+            {
+                Log::debug( 'API レスポンス不正：' . $response_body );
+                return false;
+            }
+            
+            return true;
+        } 
+        catch (\Exception $e) 
         {
-            Log::debug( 'API HTTPステータスコード不正：' . $response->getStatusCode() );
+            Log::debug( 'API処理で問題が発生しました。' );
+            Log::debug( $e->getMessage() );
             return false;
         }
-        $response_body = json_decode( $response->getBody(), true );
-        if ( $response_body['status'] != SUCCESS ) 
-        {
-            Log::debug( 'API レスポンス不正：' . $response_body );
-            return false;
-        }
-        
-        return true;
     }
 }
