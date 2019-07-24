@@ -72,18 +72,18 @@ class AdminUserProvisionController extends Controller
         $users_object = $get_user->getByEmail( $data['userName'] );
         if( $users_object === null ) 
         {
-            $users_new_object = $operation_user->update( $data );
-            if ( $users_new_object === null ) 
-            {
-                return $this->scimError( 'ユーザーの更新に失敗しました。' );
-            }
-        }
-        else
-        {
             $users_new_object = $operation_user->create( $data );
             if ( $users_new_object === null ) 
             {
                 return $this->scimError( 'ユーザーの作成に失敗しました。' );
+            }
+        }
+        else
+        {
+            $users_new_object = $operation_user->update( $data );
+            if ( $users_new_object === null ) 
+            {
+                return $this->scimError( 'ユーザーの更新に失敗しました。' );
             }
         }
         
