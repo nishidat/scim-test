@@ -209,9 +209,9 @@ class AdminUserProvisionController extends Controller
     {
         $return = 
         [
-            'schemas' => ["urn:ietf:params:scim:api:messages:2.0:Error"],
+            'schemas' => ['urn:ietf:params:scim:api:messages:2.0:Error'],
             'detail' => $message ?? 'An error occured',
-            'status' => $statusCode,    
+            'status' => Response::HTTP_NOT_FOUND,    
         ];
         Log::debug( '============Response Start============' );
         Log::debug( $return );
