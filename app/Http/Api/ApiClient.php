@@ -24,7 +24,7 @@ class ApiClient
     public function createUser( array $data ): bool
     {
         Log::debug( 'APIリクエスト' );
-        $client = new GuzzleHttp\Client();
+        $client = new \GuzzleHttp\Client();
         $response = $client->request( 'POST', self::HOST_URL, 
             [
                 'headers' => $this->headers,
@@ -63,7 +63,7 @@ class ApiClient
     public function updateUser( array $data ): bool
     {
         Log::debug( 'APIリクエスト' );
-        $client = new GuzzleHttp\Client();
+        $client = new \GuzzleHttp\Client();
         $response = $client->request( 'PUT', self::HOST_URL, 
             [
                 'headers' => $this->headers,
@@ -103,7 +103,7 @@ class ApiClient
     public function deleteUser( string $userName, string $tenant_id ): bool
     {
         Log::debug( 'APIリクエスト' );
-        $client = new GuzzleHttp\Client();
+        $client = new \GuzzleHttp\Client();
         $response = $client->request( 'DELETE', self::HOST_URL, 
             [
                 'headers' => $this->headers,
