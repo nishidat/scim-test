@@ -68,11 +68,11 @@ class AdminGroupProvisionController extends Controller
         $groups_object = $get_group->getByGroupName( $data['displayName'] );
         if( $groups_object === null ) 
         {
-            $groups_new_object = $operation_group->update( $data );
+            $groups_new_object = $operation_group->create( $data );
         }
         else
         {
-            $groups_new_object = $operation_group->create( $data );
+            $groups_new_object = $operation_group->update( $data );
         }
         
         return response()
