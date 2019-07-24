@@ -6,7 +6,7 @@ use Log;
 
 class ApiClient
 {
-    private const HOST_URL = 'https://luck-gw.mail-luck.jp/';
+    private const HOST_URL = 'https://luck-gw.mail-luck.jp/Users';
     private const SUCCESS_HTTP_STATUS = 200;
     private const SUCCESS = 'OK';
     private $headers = 
