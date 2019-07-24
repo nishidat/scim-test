@@ -3,6 +3,7 @@
 namespace App\User;
 
 use App\Model\User;
+use App\Api\ApiClient;
 use Illuminate\Support\Facades\Hash;
 use Log;
 
@@ -10,11 +11,11 @@ class OperationUser
 {
     /**
     * [create ユーザー情報登録]
-    * @param  array   $data        [登録内容]
+    * @param  array        $data        [登録内容]
     * 
-    * @return User    $users       [usersテーブルオブジェクト]
+    * @return User|null    $users       [usersテーブルオブジェクト]
     */
-    public function create( array $data ): User
+    public function create( array $data ): ?User
     {
         Log::debug( 'ユーザー情報登録内容' );
         Log::debug( $data );
@@ -25,6 +26,7 @@ class OperationUser
             $data['name']['familyName'] = '';
             $data['name']['formatted'] = '';
         }
+        DB::beginTransaction();
         $users = User::create
         (
             [
@@ -38,6 +40,14 @@ class OperationUser
                 'password' => Hash::make('password'),
             ]
         );
+        $api_client = new ApiClient();
+        if ( $api_client->createUser( $data ) === false ) 
+        {
+            DB::rollback();
+            return null;
+        }
+        
+        DB::commit();
         Log::debug( 'ユーザー情報登録完了' );
         
         return $users;
@@ -45,15 +55,16 @@ class OperationUser
     
     /**
     * [update ユーザー情報更新]
-    * @param  array       $data        [更新内容]
-    * @param  string|null $scim_id     [scim_id]
+    * @param  array            $data        [更新内容]
+    * @param  string|null      $scim_id     [scim_id]
     * 
-    * @return User        $users       [usersテーブルオブジェクト]
+    * @return User|null        $users       [usersテーブルオブジェクト]
     */
-    public function update( array $data, ?string $scim_id = null ): User
+    public function update( array $data, ?string $scim_id = null ): ?User
     {
         Log::debug( 'ユーザー情報更新内容' );
         Log::debug( $data );
+        DB::beginTransaction();
         
         if ( !empty( $scim_id ) )
         {
@@ -63,6 +74,7 @@ class OperationUser
         {
             $users = User::where( 'email', $data['userName'] )->first();
         }
+        $data['olduserName'] = $users->email;
         if ( isset( $data['active'] ) )
         {
             $users->active = $data['active'];
@@ -91,7 +103,15 @@ class OperationUser
         {
             $users->email = $data['userName'];
         }
+        $api_client = new ApiClient();
+        if ( $api_client->updateUser( $data ) === false ) 
+        {
+            DB::rollback();
+            return null;
+        }
         $users->save();
+        
+        DB::commit();
         Log::debug( 'ユーザー情報更新完了' );
         
         return $users;
@@ -103,13 +123,23 @@ class OperationUser
     * 
     * @return boolean
     */
-    public function deleteUserByScimId( string $scim_id ): boolean
+    public function deleteUserByScimId( string $scim_id, string $tenant_id ): bool
     {
-        $return = false;
-        if ( User::where( 'scim_id', $scim_id )->delete() > 0 ) 
+        $return = true;
+        DB::beginTransaction();
+        if ( User::where( 'scim_id', $scim_id )->delete() <= 0 ) 
         {
-            $return = true;
+            DB::rollback();
+            return false;
         }
+        $users = User::where( 'scim_id', $scim_id )->first();
+        $api_client = new ApiClient();
+        if ( $api_client->updateUser( $users->email, $tenant_id ) === false ) 
+        {
+            DB::rollback();
+            return null;
+        }
+        DB::commit();
         
         return $return;
     }

@@ -55,24 +55,36 @@ class AdminUserProvisionController extends Controller
     * 
     * @return JsonResponse
     */
-    public function store( Request $request)
+    public function store( Request $request, string $tenant_id )
     {
         $data = $request->all();
         if ( !isset( $data['userName'] ) ) 
         {
             return $this->scimError( 'userName がリクエストされていません。' );
         }
-        
+        if ( !isset( $tenant_id ) ) 
+        {
+            return $this->scimError( 'tenant_id がリクエストされていません。' );
+        }
+        $data['tenant_id'] = $tenant_id;
         $get_user = new GetUser();
         $operation_user = new OperationUser();
         $users_object = $get_user->getByEmail( $data['userName'] );
         if( $users_object === null ) 
         {
             $users_new_object = $operation_user->update( $data );
+            if ( $users_new_object === null ) 
+            {
+                return $this->scimError( 'ユーザーの更新に失敗しました。' );
+            }
         }
         else
         {
             $users_new_object = $operation_user->create( $data );
+            if ( $users_new_object === null ) 
+            {
+                return $this->scimError( 'ユーザーの作成に失敗しました。' );
+            }
         }
         
         return response()
@@ -108,10 +120,10 @@ class AdminUserProvisionController extends Controller
     * 
     * @return JsonResponse
     */
-    public function delete( Request $request, string $scim_id )
+    public function delete( Request $request, string $scim_id , string $tenant_id )
     {
         $operation_user = new OperationUser();
-        if ( !$operation_user->deleteUserByScimId( $scim_id ) )
+        if ( !$operation_user->deleteUserByScimId( $scim_id, $tenant_id ) )
         {
             return $this->scimError( 'リクエストされた scim_id（User） は、存在しません。' );
         }
