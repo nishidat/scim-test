@@ -41,13 +41,13 @@ class ApiClient
                     ]
                 ]
             );
-            if ( $response->getStatusCode() != SUCCESS_HTTP_STATUS ) 
+            if ( $response->getStatusCode() != self::SUCCESS_HTTP_STATUS ) 
             {
                 Log::debug( 'API HTTPステータスコード不正：' . $response->getStatusCode() );
                 return false;
             }
             $response_body = json_decode( $response->getBody(), true );
-            if ( $response_body['status'] != SUCCESS ) 
+            if ( $response_body['status'] != self::SUCCESS ) 
             {
                 Log::debug( 'API レスポンス不正：' . $response_body );
                 return false;
@@ -90,13 +90,13 @@ class ApiClient
                     ]
                 ]
             );
-            if ( $response->getStatusCode() != SUCCESS_HTTP_STATUS ) 
+            if ( $response->getStatusCode() != self::SUCCESS_HTTP_STATUS ) 
             {
                 Log::debug( 'API HTTPステータスコード不正：' . $response->getStatusCode() );
                 return false;
             }
             $response_body = json_decode( $response->getBody(), true );
-            if ( $response_body['status'] != SUCCESS ) 
+            if ( $response_body['status'] != self::SUCCESS ) 
             {
                 Log::debug( 'API レスポンス不正：' . $response_body );
                 return false;
@@ -137,13 +137,13 @@ class ApiClient
                     ]
                 ]
             );
-            if ( $response->getStatusCode() != SUCCESS_HTTP_STATUS ) 
+            if ( $response->getStatusCode() != self::SUCCESS_HTTP_STATUS ) 
             {
                 Log::debug( 'API HTTPステータスコード不正：' . $response->getStatusCode() );
                 return false;
             }
             $response_body = json_decode( $response->getBody(), true );
-            if ( $response_body['status'] != SUCCESS ) 
+            if ( $response_body['status'] != self::SUCCESS ) 
             {
                 Log::debug( 'API レスポンス不正：' . $response_body );
                 return false;
