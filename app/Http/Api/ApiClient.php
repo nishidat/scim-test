@@ -53,6 +53,7 @@ class ApiClient
                 return false;
             }
             $response_body = json_decode( $response->getBody(), true );
+            Log::debug( 'APIレスポンス' . var_dump($response_body) );
             if ( $response_body['response-data']['status'] != self::SUCCESS ) 
             {
                 Log::debug( 'API レスポンス不正：' . $response_body );
@@ -107,6 +108,7 @@ class ApiClient
                 return false;
             }
             $response_body = json_decode( $response->getBody(), true );
+            Log::debug( 'APIレスポンス' . var_dump($response_body) );
             if ( $response_body['response-data']['status'] != self::SUCCESS ) 
             {
                 Log::debug( 'API レスポンス不正：' . $response_body );
@@ -154,6 +156,7 @@ class ApiClient
                 return false;
             }
             $response_body = json_decode( $response->getBody(), true );
+            Log::debug( 'APIレスポンス' . var_dump($response_body) );
             if ( $response_body['response-data']['status'] != self::SUCCESS ) 
             {
                 Log::debug( 'API レスポンス不正：' . $response_body );
