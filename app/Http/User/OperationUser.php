@@ -135,7 +135,7 @@ class OperationUser
         }
         $users = User::where( 'scim_id', $scim_id )->first();
         $api_client = new ApiClient();
-        if ( $api_client->updateUser( $users->email, $tenant_id ) === false ) 
+        if ( $api_client->deleteUser( $users->email, $tenant_id ) === false ) 
         {
             DB::rollback();
             return null;

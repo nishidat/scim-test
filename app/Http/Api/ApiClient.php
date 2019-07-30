@@ -8,6 +8,7 @@ class ApiClient
 {
     private const HOST_URL = 'http://luck-gw.mail-luck.jp/v1/Users';
     private const SUCCESS_HTTP_STATUS = 200;
+    private const ALREADY_REGIST_STATUS = 4001001;
     private const SUCCESS = 'OK';
     private $headers = 
     [
@@ -43,11 +44,16 @@ class ApiClient
             );
             if ( $response->getStatusCode() != self::SUCCESS_HTTP_STATUS ) 
             {
+                if ( $response_body['response-data']['responseCode'] == self::SUCCESS_HTTP_STATUS ) 
+                {
+                    Log::debug( '既に登録済みです。：' . $data['userName'] );
+                    return true;
+                }
                 Log::debug( 'API HTTPステータスコード不正：' . $response->getStatusCode() );
                 return false;
             }
             $response_body = json_decode( $response->getBody(), true );
-            if ( $response_body['status'] != self::SUCCESS ) 
+            if ( $response_body['response-data']['status'] != self::SUCCESS ) 
             {
                 Log::debug( 'API レスポンス不正：' . $response_body );
                 return false;
@@ -96,7 +102,7 @@ class ApiClient
                 return false;
             }
             $response_body = json_decode( $response->getBody(), true );
-            if ( $response_body['status'] != self::SUCCESS ) 
+            if ( $response_body['response-data']['status'] != self::SUCCESS ) 
             {
                 Log::debug( 'API レスポンス不正：' . $response_body );
                 return false;
@@ -143,7 +149,7 @@ class ApiClient
                 return false;
             }
             $response_body = json_decode( $response->getBody(), true );
-            if ( $response_body['status'] != self::SUCCESS ) 
+            if ( $response_body['response-data']['status'] != self::SUCCESS ) 
             {
                 Log::debug( 'API レスポンス不正：' . $response_body );
                 return false;

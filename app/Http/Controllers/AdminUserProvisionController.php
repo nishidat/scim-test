@@ -99,7 +99,7 @@ class AdminUserProvisionController extends Controller
     * 
     * @return JsonResponse
     */
-    public function show( Request $request, string $scim_id )
+    public function show( Request $request, string $tenant_id, string $scim_id )
     {
         $get_user = new GetUser();
         $users_object = $get_user->getByScimId( $scim_id );
@@ -120,7 +120,7 @@ class AdminUserProvisionController extends Controller
     * 
     * @return JsonResponse
     */
-    public function delete( Request $request, string $scim_id , string $tenant_id )
+    public function delete( Request $request, string $tenant_id, string $scim_id )
     {
         $operation_user = new OperationUser();
         if ( !$operation_user->deleteUserByScimId( $scim_id, $tenant_id ) )
@@ -138,7 +138,7 @@ class AdminUserProvisionController extends Controller
     * 
     * @return JsonResponse
     */
-    public function update( Request $request, string $scim_id )
+    public function update( Request $request, string $tenant_id, string $scim_id )
     {
         $data = $request->all();
         $update_detail = array();
@@ -146,7 +146,7 @@ class AdminUserProvisionController extends Controller
         {
             return $this->scimError( 'Operations がリクエストされていません。' );
         }
-        
+        $update_detail['tenant_id'] = $tenant_id;
         $get_user = new GetUser();
         $users_object = $get_user->getByScimId( $scim_id );
         if( $users_object === null ) 
