@@ -103,13 +103,14 @@ class OperationUser
         if ( isset( $data['userName'] ) )
         {
             $users->email = $data['userName'];
+            $api_client = new ApiClient();
+            if ( $api_client->updateUser( $data ) === false ) 
+            {
+                DB::rollback();
+                return null;
+            }
         }
-        $api_client = new ApiClient();
-        if ( $api_client->updateUser( $data ) === false ) 
-        {
-            DB::rollback();
-            return null;
-        }
+
         $users->save();
         
         DB::commit();

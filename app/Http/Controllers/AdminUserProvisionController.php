@@ -187,13 +187,17 @@ class AdminUserProvisionController extends Controller
             }
             if( strpos( $value['path'], 'userName') !== false )
             {
+                
                 $update_detail['userName'] = $value['value'];
                 continue;
             }
         }
         $operation_user = new OperationUser();
         $users_new_object = $operation_user->update( $update_detail, $scim_id );
-        
+        if ( $users_new_object === null ) 
+        {
+            return $this->scimError( '更新処理に失敗しました。' );
+        }
         return response()
             ->json( $this->createReturnData( $users_new_object ), Response::HTTP_OK )
             ->header( 'Content-Type', 'application/scim+json' );

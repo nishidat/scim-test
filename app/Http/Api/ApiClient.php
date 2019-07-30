@@ -79,6 +79,11 @@ class ApiClient
     {
         try 
         {
+            $name = '';
+            if (!isset($data['name']['formatted'])) 
+            {
+                $name = $data['name']['formatted'];
+            }
             Log::debug( 'APIリクエスト' );
             $client = new \GuzzleHttp\Client();
             $response = $client->request( 'PUT', self::HOST_URL, 
@@ -90,7 +95,7 @@ class ApiClient
                         [
                             'userName' => $data['olduserName'],
                             'newUserName' => $data['userName'],
-                            'name' => $data['name']['formatted'],
+                            'name' => $name,
                             'tenantId' => $data['tenant_id'],
                         ]
                     ]
