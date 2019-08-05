@@ -191,6 +191,12 @@ class AdminUserProvisionController extends Controller
                 $update_detail['userName'] = $value['value'];
                 continue;
             }
+            if( strpos( $value['path'], 'active') !== false )
+            {
+                
+                $update_detail['active'] = $value['value'];
+                continue;
+            }
         }
         $operation_user = new OperationUser();
         $users_new_object = $operation_user->update( $update_detail, $scim_id );
