@@ -26,22 +26,21 @@ class ApiClient
     {
         try 
         {
-            Log::debug( 'APIリクエスト' );
             $client = new \GuzzleHttp\Client();
-            $response = $client->request( 'POST', self::HOST_URL, 
-                [
-                    'headers' => $this->headers,
-                    'json' => 
-                    [
-                        'request-data'=> 
+            $request_body = [
+                        'headers' => $this->headers,
+                        'json' => 
                         [
-                            'userName' => $data['userName'],
-                            'name' => $data['name']['formatted'],
-                            'tenantId' => $data['tenant_id'],
+                            'request-data'=> 
+                            [
+                                'userName' => $data['userName'],
+                                'name' => $data['name']['formatted'],
+                                'tenantId' => $data['tenant_id'],
+                            ]
                         ]
-                    ]
-                ]
-            );
+                    ];
+            Log::debug( 'APIリクエスト' . var_dump($request_body) );
+            $response = $client->request( 'POST', self::HOST_URL, $request_body);
             if ( $response->getStatusCode() != self::SUCCESS_HTTP_STATUS ) 
             {
                 if ( $response_body['response-data']['responseCode'] == self::SUCCESS_HTTP_STATUS ) 
@@ -85,23 +84,22 @@ class ApiClient
             {
                 $name = $data['name']['formatted'];
             }
-            Log::debug( 'APIリクエスト' );
             $client = new \GuzzleHttp\Client();
-            $response = $client->request( 'PUT', self::HOST_URL, 
-                [
-                    'headers' => $this->headers,
-                    'json' => 
-                    [
-                        'request-data'=> 
-                        [
-                            'userName' => $data['olduserName'],
-                            'newUserName' => $data['userName'],
-                            'name' => $name,
-                            'tenantId' => $data['tenant_id'],
-                        ]
-                    ]
-                ]
-            );
+            $request_body = [
+                                'headers' => $this->headers,
+                                'json' => 
+                                [
+                                    'request-data'=> 
+                                    [
+                                        'userName' => $data['olduserName'],
+                                        'newUserName' => $data['userName'],
+                                        'name' => $name,
+                                        'tenantId' => $data['tenant_id'],
+                                    ]
+                                ]
+                            ];
+            Log::debug( 'APIリクエスト' . var_dump($request_body) );
+            $response = $client->request( 'PUT', self::HOST_URL, $request_body);
             if ( $response->getStatusCode() != self::SUCCESS_HTTP_STATUS ) 
             {
                 Log::debug( 'API HTTPステータスコード不正：' . $response->getStatusCode() );
@@ -135,21 +133,20 @@ class ApiClient
     {
         try 
         {
-            Log::debug( 'APIリクエスト' );
             $client = new \GuzzleHttp\Client();
-            $response = $client->request( 'DELETE', self::HOST_URL, 
-                [
-                    'headers' => $this->headers,
-                    'json' => 
-                    [
-                        'request-data'=> 
-                        [
-                            'userName' => $userName,
-                            'tenantId' => $tenant_id,
-                        ]
-                    ]
-                ]
-            );
+            $request_body = [
+                                'headers' => $this->headers,
+                                'json' => 
+                                [
+                                    'request-data'=> 
+                                    [
+                                        'userName' => $userName,
+                                        'tenantId' => $tenant_id,
+                                    ]
+                                ]
+                            ];
+            Log::debug( 'APIリクエスト' . var_dump($request_body) );
+            $response = $client->request( 'DELETE', self::HOST_URL, $request_body);
             if ( $response->getStatusCode() != self::SUCCESS_HTTP_STATUS ) 
             {
                 Log::debug( 'API HTTPステータスコード不正：' . $response->getStatusCode() );
