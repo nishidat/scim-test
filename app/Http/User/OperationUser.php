@@ -33,6 +33,7 @@ class OperationUser
             [
                 'scim_id' => $scim_id,
                 'external_id' => $data['externalId'],
+                'display_name' => $data['displayName'],
                 'given_name' => $data['name']['givenName'],
                 'family_name' => $data['name']['familyName'],
                 'user_name' => $data['name']['formatted'],
@@ -87,6 +88,10 @@ class OperationUser
         if ( isset( $data['givenName'] ) )
         {
             $users->given_name = $data['givenName'];
+        }
+        if ( isset( $data['displayName'] ) )
+        {
+            $users->display_name = $data['displayName'];
         }
         if ( isset( $data['groupId'] ) )
         {

@@ -80,11 +80,7 @@ class AdminUserProvisionController extends Controller
         }
         else
         {
-            $users_new_object = $operation_user->update( $data );
-            if ( $users_new_object === null ) 
-            {
-                return $this->scimError( 'ユーザーの更新に失敗しました。' );
-            }
+            $users_new_object = $users_object;
         }
         
         return response()
@@ -180,6 +176,11 @@ class AdminUserProvisionController extends Controller
                 $update_detail['givenName'] = $value['value'];
                 continue;
             }
+            if( strpos( $value['path'], 'displayName') !== false )
+            {
+                $update_detail['displayName'] = $value['value'];
+                continue;
+            }
             if( strpos( $value['path'], 'externalId') !== false )
             {
                 $update_detail['externalId'] = $value['value'];
@@ -244,9 +245,9 @@ class AdminUserProvisionController extends Controller
             'startIndex' => 1,
             'itemsPerPage' => 20
         ];
-        if ( isset( $users ) && $users->count() > 0 ) 
+        if ( isset( $users ) ) 
         {
-            $return['totalResults'] = $users->count();
+            $return['totalResults'] = 1;
             $return['Resources'] = 
             [
                 'schemas' => ['urn:ietf:params:scim:schemas:core:2.0:User'],
@@ -257,6 +258,7 @@ class AdminUserProvisionController extends Controller
                     'created' => $users->created_at->toIso8601String(),
                     'lastModified' => $users->updated_at->toIso8601String(),
                 ],
+                'displayName' => $users->display_name,
                 'userName' => $users->email,
                 'name' => [
                     'formatted' => $users->user_name,
@@ -301,6 +303,7 @@ class AdminUserProvisionController extends Controller
                 'lastModified' => $users->updated_at->toIso8601String(),
                 'location' => $location
             ],
+            'displayName' => $users->display_name,
             'userName' => $users->email,
             'name' => [
                 'formatted' => $users->user_name,

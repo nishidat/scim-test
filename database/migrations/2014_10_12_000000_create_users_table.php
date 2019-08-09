@@ -18,6 +18,7 @@ class CreateUsersTable extends Migration
             $table->string('scim_id');
             $table->string('external_id')->unique();
             $table->string('user_name')->nullable();
+            $table->string('display_name')->nullable();
             $table->string('family_name')->nullable();
             $table->string('given_name')->nullable();
             $table->integer('group_id')->unsigned()->nullable();
