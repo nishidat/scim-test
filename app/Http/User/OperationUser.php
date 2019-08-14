@@ -33,6 +33,7 @@ class OperationUser
             [
                 'scim_id' => $scim_id,
                 'external_id' => $data['externalId'],
+                'tenant_id' => $data['tenant_id'],
                 'display_name' => $data['displayName'],
                 'given_name' => $data['name']['givenName'],
                 'family_name' => $data['name']['familyName'],

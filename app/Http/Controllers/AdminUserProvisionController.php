@@ -19,7 +19,7 @@ class AdminUserProvisionController extends Controller
     * 
     * @return JsonResponse
     */
-    public function index( Request $request )
+    public function index( Request $request, string $tenant_id )
     {
         if ( !$request->filled( 'filter' ) ) 
         {
@@ -34,7 +34,7 @@ class AdminUserProvisionController extends Controller
         $email = str_replace( '"', '', $matches[1] );
         
         $get_user = new GetUser();
-        $users_object = $get_user->getByEmail( $email );
+        $users_object = $get_user->getByEmail( $email, $tenant_id );
         if( $users_object === null ) 
         {
             $res_data = $this->createGetReturnData();
@@ -69,7 +69,7 @@ class AdminUserProvisionController extends Controller
         $data['tenant_id'] = $tenant_id;
         $get_user = new GetUser();
         $operation_user = new OperationUser();
-        $users_object = $get_user->getByEmail( $data['userName'] );
+        $users_object = $get_user->getByEmail( $data['userName'], $tenant_id );
         if( $users_object === null ) 
         {
             $users_new_object = $operation_user->create( $data );
@@ -84,7 +84,7 @@ class AdminUserProvisionController extends Controller
         }
         
         return response()
-            ->json( $this->createReturnData( $users_new_object ), Response::HTTP_CREATED )
+            ->json( $this->createReturnData( $users_new_object, $tenant_id ), Response::HTTP_CREATED )
             ->header( 'Content-Type', 'application/scim+json' );
     }
     
@@ -105,7 +105,7 @@ class AdminUserProvisionController extends Controller
         }
 
         return response()
-            ->json( $this->createReturnData( $users_object ), Response::HTTP_OK )
+            ->json( $this->createReturnData( $users_object, $tenant_id ), Response::HTTP_OK )
             ->header( 'Content-Type', 'application/scim+json' );
     }
     
@@ -206,7 +206,7 @@ class AdminUserProvisionController extends Controller
             return $this->scimError( '更新処理に失敗しました。' );
         }
         return response()
-            ->json( $this->createReturnData( $users_new_object ), Response::HTTP_OK )
+            ->json( $this->createReturnData( $users_new_object, $tenant_id ), Response::HTTP_OK )
             ->header( 'Content-Type', 'application/scim+json' );
     }
     
@@ -277,7 +277,9 @@ class AdminUserProvisionController extends Controller
         {
             $return['totalResults'] = 0;
         }
-        Log::debug($return);
+        Log::debug( '============Response  Start=============' );
+        Log::debug( $return );
+        Log::debug( '============Response  End=============' );
         
         return $return;
     }
@@ -289,9 +291,9 @@ class AdminUserProvisionController extends Controller
     *
     * @return array $return
     */
-    private function createReturnData( User $users ): array
+    private function createReturnData( User $users, string $tenant_id ): array
     {
-        $location = getenv( 'LOCATION_URL' ) . '/Users/' . $users->scim_id;
+        $location = getenv( 'LOCATION_URL' ) . '/' . $tenant_id . '/Users/' . $users->scim_id;
         $return = 
         [
             'schemas' => ['urn:ietf:params:scim:schemas:core:2.0:User'],
@@ -317,7 +319,9 @@ class AdminUserProvisionController extends Controller
                 'primary' => 'true'
             ]
         ];
-        Log::debug($return);
+        Log::debug( '============Response  Start=============' );
+        Log::debug( $return );
+        Log::debug( '============Response  End=============' );
         
         return $return;
     }

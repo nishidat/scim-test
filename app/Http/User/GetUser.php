@@ -13,9 +13,9 @@ class GetUser
     * 
     * @return User|null
     */
-    public function getByEmail( string $email ): ?User
+    public function getByEmail( string $email, string $tenant_id ): ?User
     {
-        return User::where( 'email', $email )->first();
+        return User::where( 'email', $email )->where( 'tenant_id', $tenant_id )->first();
     }
     
     /**
