@@ -34,12 +34,13 @@ class ApiClient
                             'request-data'=> 
                             [
                                 'userName' => $data['userName'],
-                                'name' => $data['name']['formatted'],
+                                'name' => $data['displayName'],
                                 'tenantId' => $data['tenant_id'],
                             ]
                         ]
                     ];
-            Log::debug( 'APIリクエスト' . var_dump($request_body) );
+            Log::debug( 'APIリクエスト' );
+            Log::debug( print_r( $request_body, true ) );
             $response = $client->request( 'POST', self::HOST_URL, $request_body);
             if ( $response->getStatusCode() != self::SUCCESS_HTTP_STATUS ) 
             {
@@ -52,7 +53,8 @@ class ApiClient
                 return false;
             }
             $response_body = json_decode( $response->getBody(), true );
-            Log::debug( 'APIレスポンス' . var_dump($response_body) );
+            Log::debug( 'APIレスポンス' );
+            Log::debug( print_r( $response_body, true ) );
             if ( $response_body['response-data']['status'] != self::SUCCESS ) 
             {
                 Log::debug( 'API レスポンス不正：' . $response_body );
@@ -80,9 +82,9 @@ class ApiClient
         try 
         {
             $name = '';
-            if (isset($data['name']['formatted'])) 
+            if (isset($data['displayName'])) 
             {
-                $name = $data['name']['formatted'];
+                $name = $data['displayName'];
             }
             $client = new \GuzzleHttp\Client();
             $request_body = [
@@ -98,7 +100,8 @@ class ApiClient
                                     ]
                                 ]
                             ];
-            Log::debug( 'APIリクエスト' . var_dump($request_body) );
+            Log::debug( 'APIリクエスト' );
+            Log::debug( print_r( $request_body, true ) );
             $response = $client->request( 'PUT', self::HOST_URL, $request_body);
             if ( $response->getStatusCode() != self::SUCCESS_HTTP_STATUS ) 
             {
@@ -106,7 +109,8 @@ class ApiClient
                 return false;
             }
             $response_body = json_decode( $response->getBody(), true );
-            Log::debug( 'APIレスポンス' . var_dump($response_body) );
+            Log::debug( 'APIレスポンス' );
+            Log::debug( print_r( $response_body, true ) );
             if ( $response_body['response-data']['status'] != self::SUCCESS ) 
             {
                 Log::debug( 'API レスポンス不正：' . $response_body );
@@ -145,7 +149,8 @@ class ApiClient
                                     ]
                                 ]
                             ];
-            Log::debug( 'APIリクエスト' . var_dump($request_body) );
+            Log::debug( 'APIリクエスト' );
+            Log::debug( print_r( $request_body, true ) );
             $response = $client->request( 'DELETE', self::HOST_URL, $request_body);
             if ( $response->getStatusCode() != self::SUCCESS_HTTP_STATUS ) 
             {
@@ -153,7 +158,8 @@ class ApiClient
                 return false;
             }
             $response_body = json_decode( $response->getBody(), true );
-            Log::debug( 'APIレスポンス' . var_dump($response_body) );
+            Log::debug( 'APIレスポンス' );
+            Log::debug( print_r( $response_body, true ) );
             if ( $response_body['response-data']['status'] != self::SUCCESS ) 
             {
                 Log::debug( 'API レスポンス不正：' . $response_body );
