@@ -6,9 +6,11 @@ use Log;
 
 class ApiClient
 {
-    private const HOST_URL = 'http://luck-gw.mail-luck.jp/v1/Users';
+    private const HOST_URL = 'http://luck-gw.mail-luck.jp/v2/Users';
     private const SUCCESS_HTTP_STATUS = 200;
-    private const ALREADY_REGIST_STATUS = 4001001;
+    private const ALREADY_REGIST_MAIL_STATUS = 4001001;
+    private const NOT_EXIST_MAIL_STATUS = 4002001;
+    private const ALREADY_REGIST_NAME_STATUS = 4003001;
     private const SUCCESS = 'OK';
     private $headers = 
     [
@@ -44,11 +46,6 @@ class ApiClient
             $response = $client->request( 'POST', self::HOST_URL, $request_body);
             if ( $response->getStatusCode() != self::SUCCESS_HTTP_STATUS ) 
             {
-                if ( $response_body['response-data']['responseCode'] == self::SUCCESS_HTTP_STATUS ) 
-                {
-                    Log::debug( '既に登録済みです。：' . $data['userName'] );
-                    return true;
-                }
                 Log::debug( 'API HTTPステータスコード不正：' . $response->getStatusCode() );
                 return false;
             }
@@ -57,8 +54,24 @@ class ApiClient
             Log::debug( print_r( $response_body, true ) );
             if ( $response_body['response-data']['status'] != self::SUCCESS ) 
             {
-                Log::debug( 'API レスポンス不正：' . $response_body );
-                return false;
+                switch ( $response_body['response-data']['responseCode'] ) 
+                {
+                    case self::ALREADY_REGIST_MAIL_STATUS:
+                    case self::ALREADY_REGIST_NAME_STATUS:
+                    
+                        Log::debug( '既に登録済みです。：' . $data['userName'] );
+                        return true;
+                    
+                    case self::NOT_EXIST_MAIL_STATUS:
+                    
+                        Log::debug( '存在しないアカウントです。：' . $data['userName'] );
+                        return true;
+                        
+                    default:
+                    
+                        Log::debug( 'API HTTPステータスコード不正：' . $response_body['response-data']['responseCode'] );
+                        return false;
+                }
             }
             
             return true;
