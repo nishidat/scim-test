@@ -27,6 +27,7 @@ class CreateUsersTable extends Migration
             $table->string('password');
             $table->rememberToken();
             $table->string('active')->nullable();
+            $table->string('exist_externaldb')->nullable();
             $table->timestamps();
             
             $table->index('group_id');

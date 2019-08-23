@@ -3,6 +3,7 @@
 namespace App\User;
 
 use App\Model\User;
+use App\User\GetUser;
 use App\Api\ApiClient;
 use Illuminate\Support\Facades\Hash;
 use Log;
@@ -10,6 +11,10 @@ use DB;
 
 class OperationUser
 {
+    private const OK_STATUS = 100;
+    private const NG_STATUS = 200;
+    private const OTHER_STATUS = 300;
+    
     /**
     * [create ユーザー情報登録]
     * @param  array        $data        [登録内容]
@@ -27,30 +32,56 @@ class OperationUser
             $data['name']['familyName'] = '';
             $data['name']['formatted'] = '';
         }
-        DB::beginTransaction();
-        $users = User::create
-        (
-            [
-                'scim_id' => $scim_id,
-                'external_id' => $data['externalId'],
-                'tenant_id' => $data['tenant_id'],
-                'display_name' => $data['displayName'],
-                'given_name' => $data['name']['givenName'],
-                'family_name' => $data['name']['familyName'],
-                'user_name' => $data['name']['formatted'],
-                'email' => $data['userName'],
-                'active' => $data['active'],
-                'password' => Hash::make('password'),
-            ]
-        );
+
         $api_client = new ApiClient();
-        if ( $api_client->createUser( $data ) === false ) 
-        {
-            DB::rollback();
-            return null;
-        }
         
-        DB::commit();
+        switch ( $api_client->createUser( $data ) ) 
+        {
+            case self::OK_STATUS:
+            
+                $users = User::create
+                (
+                    [
+                        'scim_id' => $scim_id,
+                        'external_id' => $data['externalId'],
+                        'tenant_id' => $data['tenant_id'],
+                        'display_name' => $data['displayName'],
+                        'given_name' => $data['name']['givenName'],
+                        'family_name' => $data['name']['familyName'],
+                        'user_name' => $data['name']['formatted'],
+                        'email' => $data['userName'],
+                        'active' => $data['active'],
+                        'exist_externaldb' => 'true',
+                        'password' => Hash::make('password'),
+                    ]
+                );
+                break;
+            
+            case self::OTHER_STATUS:
+            
+                $users = User::create
+                (
+                    [
+                        'scim_id' => $scim_id,
+                        'external_id' => $data['externalId'],
+                        'tenant_id' => $data['tenant_id'],
+                        'display_name' => $data['displayName'],
+                        'given_name' => $data['name']['givenName'],
+                        'family_name' => $data['name']['familyName'],
+                        'user_name' => $data['name']['formatted'],
+                        'email' => $data['userName'],
+                        'active' => $data['active'],
+                        'exist_externaldb' => 'false',
+                        'password' => Hash::make('password'),
+                    ]
+                );
+                break;
+            
+            default:
+                return null;
+                
+        }
+
         Log::debug( 'ユーザー情報登録完了' );
         
         return $users;
@@ -67,15 +98,16 @@ class OperationUser
     {
         Log::debug( 'ユーザー情報更新内容' );
         Log::debug( $data );
-        DB::beginTransaction();
+        
+        $get_user = new GetUser();
         
         if ( !empty( $scim_id ) )
         {
-            $users = User::where( 'scim_id', $scim_id )->first();
+            $users = $get_user->getByScimId( $scim_id );
         }
         else
         {
-            $users = User::where( 'email', $data['userName'] )->first();
+            $users = $get_user->getByEmail( $data['userName'], $data['tenant_id'] );
         }
         $data['olduserName'] = $users->email;
         if ( isset( $data['active'] ) )
@@ -109,17 +141,18 @@ class OperationUser
         if ( isset( $data['userName'] ) )
         {
             $users->email = $data['userName'];
-            $api_client = new ApiClient();
-            if ( $api_client->updateUser( $data ) === false ) 
+            if ( $users->exist_externaldb != "false" ) 
             {
-                DB::rollback();
-                return null;
+                $api_client = new ApiClient();
+                if ( $api_client->updateUser( $data ) === false ) 
+                {
+                    return null;
+                }
             }
         }
 
         $users->save();
         
-        DB::commit();
         Log::debug( 'ユーザー情報更新完了' );
         
         return $users;
@@ -134,20 +167,16 @@ class OperationUser
     public function deleteUserByScimId( string $scim_id, string $tenant_id ): bool
     {
         $return = true;
-        DB::beginTransaction();
         if ( User::where( 'scim_id', $scim_id )->delete() <= 0 ) 
         {
-            DB::rollback();
             return false;
         }
         $users = User::where( 'scim_id', $scim_id )->first();
         $api_client = new ApiClient();
-        if ( $api_client->deleteUser( $users->email, $tenant_id ) === false ) 
+        if ( $api_client->deleteUser( $users ) === false ) 
         {
-            DB::rollback();
-            return null;
+            return false;
         }
-        DB::commit();
         
         return $return;
     }
