@@ -42,8 +42,8 @@ class CreateToken extends Command
         $edit_auth = new EditOauth();
         if ( $edit_auth->createTokenBytenantID( $tenant_id ) ) 
         {
-            return OK;
+            return true;
         }
-        return NG;
+        return false;
     }
 }
