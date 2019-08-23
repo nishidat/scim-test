@@ -173,8 +173,8 @@ class ApiClient
                                 [
                                     'request-data'=> 
                                     [
-                                        'userName' => $data['user_name'],
-                                        'tenantId' => $data['tenant_id'],
+                                        'userName' => $users->user_name,
+                                        'tenantId' => $users->tenant_id,
                                     ]
                                 ]
                             ];
