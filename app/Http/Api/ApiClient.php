@@ -57,7 +57,7 @@ class ApiClient
             
             return self::OK_STATUS;
         }
-        catch (Guzzle\Http\Exception\ClientErrorResponseException $e) 
+        catch ( \GuzzleHttp\Exception\ClientException $e ) 
         {
             $response =$e->getResponse();
             if ( isset( $response )) 
