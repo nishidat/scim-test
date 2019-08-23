@@ -16,7 +16,7 @@ class CreateOauthTable extends Migration
         Schema::create('oauth', function (Blueprint $table) {
             $table->increments('id');
             $table->string('tenant_id')->unique();
-            $table->string('token');
+            $table->string('token'); // シークレットトークン
             $table->timestamps();
         });
     }

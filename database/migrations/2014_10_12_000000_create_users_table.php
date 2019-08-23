@@ -17,17 +17,17 @@ class CreateUsersTable extends Migration
             $table->increments('id');
             $table->string('scim_id');
             $table->string('external_id');
-            $table->string('tenant_id');
-            $table->string('user_name')->nullable();
-            $table->string('display_name')->nullable();
-            $table->string('family_name')->nullable();
-            $table->string('given_name')->nullable();
-            $table->integer('group_id')->unsigned()->nullable();
+            $table->string('tenant_id'); // テナントID
+            $table->string('user_name')->nullable(); // AADのユーザーネーム
+            $table->string('display_name')->nullable(); // AADのユーザー表示名
+            $table->string('family_name')->nullable(); // AADのユーザー名字
+            $table->string('given_name')->nullable(); // AADのユーザー名前
+            $table->integer('group_id')->unsigned()->nullable(); // GroupID
             $table->string('email');
-            $table->string('password');
+            $table->string('password'); // 使用していないがLaravel上必要
             $table->rememberToken();
-            $table->string('active')->nullable();
-            $table->string('exist_externaldb')->nullable();
+            $table->string('active')->nullable(); // AADのactiveステータス
+            $table->string('exist_externaldb')->nullable(); // 貴社側DBに存在しない場合「false」
             $table->timestamps();
             
             $table->index('group_id');
