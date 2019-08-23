@@ -31,7 +31,7 @@ class EditOauth
         (
             [
                 'tenant_id' => $tenant_id,
-                'token' => random_bytes(self::TOKEN_LENGTH),
+                'token' => substr( bin2hex( random_bytes( self::TOKEN_LENGTH ) ), 0, self::TOKEN_LENGTH ),
             ]
         );
         return true;
