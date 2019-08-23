@@ -103,21 +103,35 @@ class ApiClient
             if (isset($data['displayName'])) 
             {
                 $name = $data['displayName'];
+                $request_body = [
+                                    'headers' => $this->headers,
+                                    'json' => 
+                                    [
+                                        'request-data'=> 
+                                        [
+                                            'userName' => $data['olduserName'],
+                                            'name' => $name,
+                                            'tenantId' => $data['tenant_id'],
+                                        ]
+                                    ]
+                                ];
+            }
+            else
+            {
+                $request_body = [
+                                    'headers' => $this->headers,
+                                    'json' => 
+                                    [
+                                        'request-data'=> 
+                                        [
+                                            'userName' => $data['olduserName'],
+                                            'newUserName' => $data['userName'],
+                                            'tenantId' => $data['tenant_id'],
+                                        ]
+                                    ]
+                                ];
             }
             $client = new \GuzzleHttp\Client();
-            $request_body = [
-                                'headers' => $this->headers,
-                                'json' => 
-                                [
-                                    'request-data'=> 
-                                    [
-                                        'userName' => $data['olduserName'],
-                                        'newUserName' => $data['userName'],
-                                        'name' => $name,
-                                        'tenantId' => $data['tenant_id'],
-                                    ]
-                                ]
-                            ];
             Log::debug( 'APIリクエスト' );
             Log::debug( print_r( $request_body, true ) );
             $response = $client->request( 'PUT', self::HOST_URL, $request_body);
