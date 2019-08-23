@@ -42,8 +42,10 @@ class CreateToken extends Command
         $edit_auth = new EditOauth();
         if ( $edit_auth->createTokenBytenantID( $tenant_id ) ) 
         {
+            var_dump( $edit_auth->getBytenantID( $tenant_id ) );
             return true;
         }
+        echo "シークレットトークンの作成に失敗しました。\n";
         return false;
     }
 }

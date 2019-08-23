@@ -48,12 +48,14 @@ class RecoveryCreateApiFromID extends Command
         $data['displayName'] = $user->display_name;
         $data['tenant_id'] = $user->tenant_id;
         $api_client = new ApiClient();
-        if ( $api_client->createUser( $data ) == OK_STATUS ) 
+        if ( $api_client->createUser( $data ) == self::OK_STATUS ) 
         {
             $user->exist_externaldb = 'true';
             $user->save();
-            return OK;
+            echo "正常に処理が終了しました。\n";
+            return true;
         }
-        return NG;
+        echo "異常終了しました。\n";
+        return false;
     }
 }
