@@ -182,13 +182,17 @@ class OperationUser
     public function deleteUserByScimId( string $scim_id, string $tenant_id ): bool
     {
         $return = true;
-        if ( User::where( 'scim_id', $scim_id )->delete() <= 0 ) 
-        {
-            return false;
-        }
+
         $users = User::where( 'scim_id', $scim_id )->first();
-        $api_client = new ApiClient();
-        if ( $api_client->deleteUser( $users ) === false ) 
+        if ( $users->exist_externaldb != "false" ) 
+        {
+            $api_client = new ApiClient();
+            if ( $api_client->deleteUser( $users ) === false ) 
+            {
+                return false;
+            }
+        }
+        if ( User::where( 'scim_id', $scim_id )->delete() <= 0 ) 
         {
             return false;
         }
