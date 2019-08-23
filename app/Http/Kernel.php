@@ -64,6 +64,7 @@ class Kernel extends HttpKernel
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'client' => CheckClientCredentials::class,
         'requestlog' => \App\Http\Middleware\RequestLog::class,
+        'oauthcheck' => \App\Http\Middleware\OAuthCheck::class,
     ];
 
     /**

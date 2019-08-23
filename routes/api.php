@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 */
 
 Route::prefix('scim/v2')
+->middleware('oauthcheck')
 ->middleware('requestlog')
 ->group(function (\Illuminate\Routing\Router $router) {
     // Users
