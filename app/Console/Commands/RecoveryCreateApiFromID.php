@@ -44,7 +44,7 @@ class RecoveryCreateApiFromID extends Command
         $get_user = new GetUser();
         $user = $get_user->getById( $id );
         if ( $user === null ) return null;
-        $data['userName'] = $user->user_name;
+        $data['userName'] = $user->email;
         $data['displayName'] = $user->display_name;
         $data['tenant_id'] = $user->tenant_id;
         $api_client = new ApiClient();
