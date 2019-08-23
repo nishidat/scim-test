@@ -113,6 +113,21 @@ class OperationUser
         if ( isset( $data['active'] ) )
         {
             $users->active = $data['active'];
+            if ( $data['active'] == 'true' ) 
+            {
+                $api_client = new ApiClient();
+                if ( $api_client->createUser( $data ) == self::NG_STATUS ) {
+                    return null;
+                }
+            }
+            else 
+            {
+                $api_client = new ApiClient();
+                if ( $api_client->deleteUser( $users ) === false ) 
+                {
+                    return null;
+                }
+            }
         }
         if ( isset( $data['formatted'] ) )
         {
