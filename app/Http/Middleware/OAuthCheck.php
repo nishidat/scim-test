@@ -22,11 +22,11 @@ class OAuthCheck
         $token = $edit_auth->getBytenantID( $tenant_id );
     
         $headers = getallheaders();    
-        if ( isset( $headers['Authorization'] ) ) 
+        if ( !isset( $headers['Authorization'] ) ) 
         {
-            $authorization = $headers['Authorization'];
+            return response( 'Authorization', 400 );
         }
-        if( str_replace('Bearer ', '', $authorization ) != $token )
+        if( str_replace('Bearer ', '', $headers['Authorization'] ) != $token )
         {
             return response( 'Authorization', 400 );
         }
