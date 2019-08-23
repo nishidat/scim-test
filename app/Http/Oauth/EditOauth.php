@@ -14,7 +14,7 @@ class EditOauth
     * 
     * @return string $token
     */
-    public function getBytenantID( string $tenant_id ): string
+    public function getBytenantID( string $tenant_id ): ?string
     {
         return Oauth::where( 'tenant_id', $tenant_id )->value( 'token' );
     }
