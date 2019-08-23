@@ -28,4 +28,15 @@ class GetUser
     {
         return User::where( 'scim_id', $scim_id )->first();
     }
+    
+    /**
+    * [getByID IDによるユーザー取得]
+    * @param  string $email
+    * 
+    * @return User|null
+    */
+    public function getByID( string $id ): ?User
+    {
+        return User::where( 'id', $id )->first();
+    }
 }

@@ -9,9 +9,12 @@ class ApiClient
     private const HOST_URL = 'http://luck-gw.mail-luck.jp/v2/Users';
     private const SUCCESS_HTTP_STATUS = 200;
     private const ALREADY_REGIST_MAIL_STATUS = 4001001;
-    private const NOT_EXIST_MAIL_STATUS = 4002001;
+    private const NOT_EXIST_MAIL_STATUS = 4000004;
     private const ALREADY_REGIST_NAME_STATUS = 4003001;
     private const SUCCESS = 'OK';
+    private const OK_STATUS = 100;
+    private const NG_STATUS = 200;
+    private const OTHER_STATUS = 300;
     private $headers = 
     [
         'Authorization' => 'Basic YXBpdGVzdEBtYWlsLWx1Y2suanA6UGFzc1dvcmQ=',
@@ -20,11 +23,11 @@ class ApiClient
     
     /**
      * [createUser API]
-     * @param  array $data [登録内容]
+     * @param  array  $data      [登録内容]
      * 
-     * @return bool        [結果]
+     * @return string $res_code  [結果]
      */
-    public function createUser( array $data ): bool
+    public function createUser( array $data ): string
     {
         try 
         {
@@ -47,7 +50,7 @@ class ApiClient
             if ( $response->getStatusCode() != self::SUCCESS_HTTP_STATUS ) 
             {
                 Log::debug( 'API HTTPステータスコード不正：' . $response->getStatusCode() );
-                return false;
+                return self::NG_STATUS;
             }
             $response_body = json_decode( $response->getBody(), true );
             Log::debug( 'APIレスポンス' );
@@ -60,27 +63,29 @@ class ApiClient
                     case self::ALREADY_REGIST_NAME_STATUS:
                     
                         Log::debug( '既に登録済みです。：' . $data['userName'] );
-                        return true;
+                        return self::OK_STATUS;
+                        break;
                     
                     case self::NOT_EXIST_MAIL_STATUS:
                     
                         Log::debug( '存在しないアカウントです。：' . $data['userName'] );
-                        return true;
+                        return self::OTHER_STATUS;
+                        break;
                         
                     default:
                     
                         Log::debug( 'API HTTPステータスコード不正：' . $response_body['response-data']['responseCode'] );
-                        return false;
+                        return self::NG_STATUS;
                 }
             }
             
-            return true;
+            return self::OK_STATUS;
         } 
         catch (\Exception $e) 
         {
             Log::debug( 'API処理で問題が発生しました。' );
             Log::debug( $e->getMessage() );
-            return false;
+            return self::NG_STATUS;
         }
     }
     
@@ -146,7 +151,7 @@ class ApiClient
      * 
      * @return bool        [結果]
      */
-    public function deleteUser( string $userName, string $tenant_id ): bool
+    public function deleteUser( array $data ): bool
     {
         try 
         {
@@ -157,8 +162,8 @@ class ApiClient
                                 [
                                     'request-data'=> 
                                     [
-                                        'userName' => $userName,
-                                        'tenantId' => $tenant_id,
+                                        'userName' => $data['user_name'],
+                                        'tenantId' => $data['tenant_id'],
                                     ]
                                 ]
                             ];
