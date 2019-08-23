@@ -157,14 +157,15 @@ class ApiClient
     
     /**
      * [deleteUser API]
-     * @param  array $data [登録内容]
+     * @param  User|null $users [usersテーブルオブジェクト]
      * 
      * @return bool        [結果]
      */
-    public function deleteUser( array $data ): bool
+    public function deleteUser( ?User $users = null ): bool
     {
         try 
         {
+            if ( $users === null ) return false;
             $client = new \GuzzleHttp\Client();
             $request_body = [
                                 'headers' => $this->headers,
