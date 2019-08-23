@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Api;
-
+use App\Model\User;
 use Log;
 
 class ApiClient
