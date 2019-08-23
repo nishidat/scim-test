@@ -109,38 +109,24 @@ class ApiClient
     {
         try 
         {
-            $name = '';
-            if (isset($data['displayName'])) 
-            {
-                $name = $data['displayName'];
-                $request_body = [
-                                    'headers' => $this->headers,
-                                    'json' => 
-                                    [
-                                        'request-data'=> 
-                                        [
-                                            'userName' => $data['olduserName'],
-                                            'name' => $name,
-                                            'tenantId' => $data['tenant_id'],
-                                        ]
-                                    ]
-                                ];
+            $request_data = [
+                'userName' => $data['olduserName'],
+                'tenantId' => $data['tenant_id'],
+            ];
+            if ( isset( $data['displayName'] ) ) {
+                $request_data['name'] = $data['displayName'];
             }
-            else
-            {
-                $request_body = [
-                                    'headers' => $this->headers,
-                                    'json' => 
-                                    [
-                                        'request-data'=> 
-                                        [
-                                            'userName' => $data['olduserName'],
-                                            'newUserName' => $data['userName'],
-                                            'tenantId' => $data['tenant_id'],
-                                        ]
-                                    ]
-                                ];
+            if ( isset( $data['userName'] ) ) {
+                $request_data['newUserName'] = $data['userName'];
             }
+            
+            $request_body = [
+                                'headers' => $this->headers,
+                                'json' => 
+                                [
+                                    'request-data'=> $request_data
+                                ]
+                            ];
             $client = new \GuzzleHttp\Client();
             Log::debug( 'APIリクエスト' );
             Log::debug( print_r( $request_body, true ) );
