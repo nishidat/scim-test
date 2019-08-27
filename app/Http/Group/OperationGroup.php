@@ -3,6 +3,7 @@
 namespace App\Group;
 
 use App\Model\Group;
+use App\Group\GetGroup;
 use Log;
 
 class OperationGroup
@@ -43,22 +44,24 @@ class OperationGroup
         Log::debug( 'グループ情報更新内容' );
         Log::debug( $data );
         
+        $get_group = new GetGroup();
+        
         if ( !empty( $scim_id ) )
         {
-            $groups = Group::where( 'scim_id', $scim_id )->first();
+            $groups_object = $get_group->getByScimId( $scim_id );
         }
         else
         {
-            $groups = Group::where( 'group_name', $data['displayName'] )->first();
+            $groups_object = $get_group->getByGroupName( $data['displayName'] );
         }
         if ( isset( $data['displayName'] ) )
         {
-            $groups->group_name = $data['displayName'];
+            $groups_object->group_name = $data['displayName'];
         }
-        $groups->save();
+        $groups_object->save();
         Log::debug( 'グループ情報更新完了' );
         
-        return $groups;
+        return $groups_object;
     }
     
     /**
