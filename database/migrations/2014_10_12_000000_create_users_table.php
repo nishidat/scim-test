@@ -29,6 +29,7 @@ class CreateUsersTable extends Migration
             $table->string('active')->nullable(); // AADのactiveステータス
             $table->string('exist_externaldb')->nullable(); // 貴社側DBに存在しない場合「false」
             $table->timestamps();
+            $table->softDeletes();
             
             $table->index('group_id');
             $table->foreign('group_id')->references('id')->on('groups');

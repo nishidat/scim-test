@@ -48,7 +48,7 @@ class ApiClient
             Log::debug( print_r( $request_body, true ) );
             $response = $client->request( 'POST', self::HOST_URL, $request_body);
             $response_body = json_decode( $response->getBody(), true );
-            Log::debug( 'APIレスポンス' );
+            Log::debug( 'APIレスポンス POST' );
             Log::debug( print_r( $response_body, true ) );
             if ( $response_body['response-data']['status'] != self::SUCCESS ) 
             {
@@ -137,7 +137,7 @@ class ApiClient
                 return false;
             }
             $response_body = json_decode( $response->getBody(), true );
-            Log::debug( 'APIレスポンス' );
+            Log::debug( 'APIレスポンス PUT' );
             Log::debug( print_r( $response_body, true ) );
             if ( $response_body['response-data']['status'] != self::SUCCESS ) 
             {
@@ -187,7 +187,7 @@ class ApiClient
                 return false;
             }
             $response_body = json_decode( $response->getBody(), true );
-            Log::debug( 'APIレスポンス' );
+            Log::debug( 'APIレスポンス DELETE' );
             Log::debug( print_r( $response_body, true ) );
             if ( $response_body['response-data']['status'] != self::SUCCESS ) 
             {
