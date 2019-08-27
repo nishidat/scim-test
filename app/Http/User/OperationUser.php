@@ -100,6 +100,7 @@ class OperationUser
         Log::debug( $data );
         
         $get_user = new GetUser();
+        $delete_api_flag = false;
         
         if ( !empty( $scim_id ) )
         {
@@ -122,13 +123,14 @@ class OperationUser
                         return null;
                     }
                 }
-                else 
+                else
                 {
                     $api_client = new ApiClient();
                     if ( $api_client->deleteUser( $users ) === false ) 
                     {
                         return null;
                     }
+                    $delete_api_flag = true;
                 }
             }
         }
@@ -143,7 +145,7 @@ class OperationUser
         if ( isset( $data['displayName'] ) )
         {
             $users->display_name = $data['displayName'];
-            if ( $users->exist_externaldb != "false" ) 
+            if ( $users->exist_externaldb != "false" && $delete_api_flag === false ) 
             {
                 $api_client = new ApiClient();
                 if ( $api_client->updateUser( $data ) === false ) 
@@ -167,7 +169,7 @@ class OperationUser
         if ( isset( $data['userName'] ) )
         {
             $users->email = $data['userName'];
-            if ( $users->exist_externaldb != "false" ) 
+            if ( $users->exist_externaldb != "false" && $delete_api_flag === false ) 
             {
                 $api_client = new ApiClient();
                 if ( $api_client->updateUser( $data ) === false ) 

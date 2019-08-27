@@ -158,7 +158,7 @@ class AdminGroupProvisionController extends Controller
                     {
                         $update_detail['groupId'] = $groups_object->id;
                         $operation_user = new OperationUser();
-                        $operation_user->update( $update_detail, $value['value'][0]['value'] );
+                        $operation_user->update( $update_detail, $scim_id );
                     }
                     break;
                     
@@ -167,7 +167,7 @@ class AdminGroupProvisionController extends Controller
                     {
                         $update_detail['groupId'] = null;
                         $operation_user = new OperationUser();
-                        $operation_user->update( $update_detail, $value['value'][0]['value'] );
+                        $operation_user->update( $update_detail, $scim_id );
                     }
                     break;
                 
@@ -215,15 +215,15 @@ class AdminGroupProvisionController extends Controller
             'startIndex' => 1,
             'itemsPerPage' => 20
         ];
-        if ( isset( $groups ) && $groups->count() > 0) 
+        if ( isset( $groups ) ) 
         {
-            $return['totalResults'] = $groups->count();
+            $return['totalResults'] = 1;
         }else{
             $return['totalResults'] = 0;
         }
-        Log::debug('============Response Start============');
-        Log::debug($return);
-        Log::debug('============Response End============');
+        Log::debug( '============Response Start============' );
+        Log::debug( $return );
+        Log::debug( '============Response End============' );
         
         return $return;
     }
@@ -237,10 +237,10 @@ class AdminGroupProvisionController extends Controller
     */
     private function createReturnData( Group $groups ): array
     {
-        $location = getenv( 'LOCATION_URL' ) . '/Groups/' . $groups->scim_id;
+        $location = getenv( 'LOCATION_URL' ) . '/' . $tenant_id . '/Groups/' . $users->scim_id;
         $return = 
         [
-            'schemas' => ['urn:ietf:params:scim:schemas:core:2.0:User'],
+            'schemas' => ['urn:ietf:params:scim:schemas:core:2.0:Group'],
             'id' => $groups->scim_id,
             'externalId' => $groups->external_id,
             'meta' => [
@@ -251,9 +251,9 @@ class AdminGroupProvisionController extends Controller
             ],
             'displayName' => $groups->group_name,
         ];
-        Log::debug('============Response Start============');
-        Log::debug($return);
-        Log::debug('============Response End============');
+        Log::debug( '============Response Start============' );
+        Log::debug( $return );
+        Log::debug( '============Response End============' );
         
         return $return;
     }
