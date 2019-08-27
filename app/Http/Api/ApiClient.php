@@ -44,7 +44,7 @@ class ApiClient
                             ]
                         ]
                     ];
-            Log::debug( 'APIリクエスト' );
+            Log::debug( 'APIリクエスト POST' );
             Log::debug( print_r( $request_body, true ) );
             $response = $client->request( 'POST', self::HOST_URL, $request_body);
             $response_body = json_decode( $response->getBody(), true );
@@ -128,7 +128,7 @@ class ApiClient
                                 ]
                             ];
             $client = new \GuzzleHttp\Client();
-            Log::debug( 'APIリクエスト' );
+            Log::debug( 'APIリクエスト PUT' );
             Log::debug( print_r( $request_body, true ) );
             $response = $client->request( 'PUT', self::HOST_URL, $request_body);
             if ( $response->getStatusCode() != self::SUCCESS_HTTP_STATUS ) 
@@ -178,7 +178,7 @@ class ApiClient
                                     ]
                                 ]
                             ];
-            Log::debug( 'APIリクエスト' );
+            Log::debug( 'APIリクエスト DELETE' );
             Log::debug( print_r( $request_body, true ) );
             $response = $client->request( 'DELETE', self::HOST_URL, $request_body);
             if ( $response->getStatusCode() != self::SUCCESS_HTTP_STATUS ) 

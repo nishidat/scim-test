@@ -112,20 +112,23 @@ class OperationUser
         $data['olduserName'] = $users->email;
         if ( isset( $data['active'] ) )
         {
-            $users->active = $data['active'];
-            if ( $data['active'] == 'true' ) 
+            if ( $users->exist_externaldb != "false" ) 
             {
-                $api_client = new ApiClient();
-                if ( $api_client->createUser( $data ) == self::NG_STATUS ) {
-                    return null;
-                }
-            }
-            else 
-            {
-                $api_client = new ApiClient();
-                if ( $api_client->deleteUser( $users ) === false ) 
+                $users->active = $data['active'];
+                if ( $data['active'] == 'true' ) 
                 {
-                    return null;
+                    $api_client = new ApiClient();
+                    if ( $api_client->createUser( $data ) == self::NG_STATUS ) {
+                        return null;
+                    }
+                }
+                else 
+                {
+                    $api_client = new ApiClient();
+                    if ( $api_client->deleteUser( $users ) === false ) 
+                    {
+                        return null;
+                    }
                 }
             }
         }
@@ -140,6 +143,14 @@ class OperationUser
         if ( isset( $data['displayName'] ) )
         {
             $users->display_name = $data['displayName'];
+            if ( $users->exist_externaldb != "false" ) 
+            {
+                $api_client = new ApiClient();
+                if ( $api_client->updateUser( $data ) === false ) 
+                {
+                    return null;
+                }
+            }
         }
         if ( isset( $data['groupId'] ) )
         {
