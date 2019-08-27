@@ -9,6 +9,7 @@ use Laravel\Passport\HasApiTokens;
 
 class User extends Authenticatable
 {
+    use SoftDeletes;
     // use HasApiTokens;
     // use Notifiable;
 
