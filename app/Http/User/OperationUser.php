@@ -113,15 +113,22 @@ class OperationUser
         $data['olduserName'] = $users->email;
         if ( isset( $data['active'] ) )
         {
-            if ( $data['active'] == 'true' ) $users->active = 'true';
-            if ( $data['active'] == 'false' ) $users->active = 'false';
+            if ( $data['active'] == 'true' ) 
+            {
+                $users->active = 'true';
+            }
+            else
+            {
+                $users->active = 'false';
+            }
             
             if ( $users->exist_externaldb != 'false' ) 
             {
                 if ( $users->active == 'true' ) 
                 {
                     $api_client = new ApiClient();
-                    if ( $api_client->createUser( $data ) == self::NG_STATUS ) {
+                    if ( $api_client->createUser( $data ) == self::NG_STATUS ) 
+                    {
                         return null;
                     }
                 }
