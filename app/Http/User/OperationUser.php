@@ -50,7 +50,7 @@ class OperationUser
                         'family_name' => $data['name']['familyName'],
                         'user_name' => $data['name']['formatted'],
                         'email' => $data['userName'],
-                        'active' => $data['active'],
+                        'active' => 'true',
                         'exist_externaldb' => 'true',
                         'password' => Hash::make('password'),
                     ]
@@ -70,7 +70,7 @@ class OperationUser
                         'family_name' => $data['name']['familyName'],
                         'user_name' => $data['name']['formatted'],
                         'email' => $data['userName'],
-                        'active' => $data['active'],
+                        'active' => 'true',
                         'exist_externaldb' => 'false',
                         'password' => Hash::make('password'),
                     ]
@@ -113,10 +113,12 @@ class OperationUser
         $data['olduserName'] = $users->email;
         if ( isset( $data['active'] ) )
         {
-            if ( $users->exist_externaldb != "false" ) 
+            if ( $data['active'] == 'true' ) $users->active = 'true';
+            if ( $data['active'] == 'false' ) $users->active = 'false';
+            
+            if ( $users->exist_externaldb != 'false' ) 
             {
-                $users->active = $data['active'];
-                if ( $data['active'] == 'true' ) 
+                if ( $users->active == 'true' ) 
                 {
                     $api_client = new ApiClient();
                     if ( $api_client->createUser( $data ) == self::NG_STATUS ) {
@@ -145,7 +147,7 @@ class OperationUser
         if ( isset( $data['displayName'] ) )
         {
             $users->display_name = $data['displayName'];
-            if ( $users->exist_externaldb != "false" && $delete_api_flag === false ) 
+            if ( $users->exist_externaldb != 'false' && $delete_api_flag === false ) 
             {
                 $api_client = new ApiClient();
                 if ( $api_client->updateUser( $data ) === false ) 
@@ -169,7 +171,7 @@ class OperationUser
         if ( isset( $data['userName'] ) )
         {
             $users->email = $data['userName'];
-            if ( $users->exist_externaldb != "false" && $delete_api_flag === false ) 
+            if ( $users->exist_externaldb != 'false' && $delete_api_flag === false ) 
             {
                 $api_client = new ApiClient();
                 if ( $api_client->updateUser( $data ) === false ) 
