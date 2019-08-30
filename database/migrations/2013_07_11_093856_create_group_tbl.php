@@ -19,6 +19,7 @@ class CreateGroupTbl extends Migration
             $table->string('external_id')->unique();
             $table->string('group_name');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
