@@ -160,20 +160,26 @@ class AdminGroupProvisionController extends Controller
                 case 'Add':
                     if( strpos( $value['path'], 'members' ) !== false )
                     {
-                        $update_detail['groupId'] = $groups_object->id;
-                        $update_detail['userName'] = $value['value'];
-                        $operation_user = new OperationUser();
-                        $operation_user->update( $update_detail );
+                        foreach ($value['value'] as $key => $value) 
+                        {
+                            $update_detail['groupId'] = $groups_object->id;
+                            $update_detail['userName'] = $value['value'];
+                            $operation_user = new OperationUser();
+                            $operation_user->update( $update_detail );
+                        }
                     }
                     break;
                     
                 case 'Remove':
                     if( strpos( $value['path'], 'members' ) !== false )
                     {
-                        $update_detail['groupId'] = null;
-                        $update_detail['userName'] = $value['value'];
-                        $operation_user = new OperationUser();
-                        $operation_user->update( $update_detail );
+                        foreach ($value['value'] as $key => $value) 
+                        {
+                            $update_detail['groupId'] = null;
+                            $update_detail['userName'] = $value['value'];
+                            $operation_user = new OperationUser();
+                            $operation_user->update( $update_detail );
+                        }   
                     }
                     break;
                 
