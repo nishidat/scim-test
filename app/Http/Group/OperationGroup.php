@@ -71,7 +71,7 @@ class OperationGroup
     * 
     * @return boolean
     */
-    public function deleteGroupByScimId( string $scim_id, string $tenant_id ): boolean
+    public function deleteGroupByScimId( string $scim_id, string $tenant_id ): bool
     {
         $return = true;
         if ( Group::where( 'scim_id', $scim_id )->where( 'tenant_id', $tenant_id )->delete() <= 0 ) 
