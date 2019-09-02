@@ -165,6 +165,14 @@ class OperationUser
         }
         if ( isset( $data['groupId'] ) )
         {
+            if ( $data['groupId'] == 'true' ) 
+            {
+                $users->group_id = 'true';
+            }
+            else
+            {
+                $users->group_id = 'false';
+            }
             $users->group_id = $data['groupId'];
         } 
         if ( isset( $data['familyName'] ) )
