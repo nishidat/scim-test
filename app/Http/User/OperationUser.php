@@ -173,7 +173,6 @@ class OperationUser
             {
                 $users->group_id = 'false';
             }
-            $users->group_id = $data['groupId'];
         } 
         if ( isset( $data['familyName'] ) )
         {
