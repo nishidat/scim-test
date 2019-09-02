@@ -52,7 +52,7 @@ class ApiClient
             Log::debug( print_r( $response_body, true ) );
             if ( $response_body['response-data']['status'] != self::SUCCESS ) 
             {
-                
+                return self::NG_STATUS;
             }
             
             return self::OK_STATUS;
@@ -131,22 +131,44 @@ class ApiClient
             Log::debug( 'APIリクエスト PUT' );
             Log::debug( print_r( $request_body, true ) );
             $response = $client->request( 'PUT', self::HOST_URL, $request_body);
-            if ( $response->getStatusCode() != self::SUCCESS_HTTP_STATUS ) 
-            {
-                Log::debug( 'API HTTPステータスコード不正：' . $response->getStatusCode() );
-                return false;
-            }
             $response_body = json_decode( $response->getBody(), true );
             Log::debug( 'APIレスポンス PUT' );
             Log::debug( print_r( $response_body, true ) );
             if ( $response_body['response-data']['status'] != self::SUCCESS ) 
             {
-                Log::debug( 'API レスポンス不正：' . $response_body );
                 return false;
             }
             
             return true;
-        } 
+        }
+        catch ( \GuzzleHttp\Exception\ClientException $e ) 
+        {
+            $response =$e->getResponse();
+            if ( isset( $response )) 
+            {
+                $response_body = json_decode( $response->getBody(), true );
+                switch ( $response_body['response-data']['responseCode'] ) 
+                {
+                    case self::ALREADY_REGIST_MAIL_STATUS:
+                    case self::ALREADY_REGIST_NAME_STATUS:
+                    
+                        Log::debug( '既に登録済みです。：' . $data['userName'] );
+                        return true;
+                        break;
+                        
+                    default:
+                    
+                        Log::debug( 'API HTTPステータスコード不正：' . $response_body['response-data']['responseCode'] );
+                        return false;
+                }
+            }
+            else 
+            {
+                Log::debug( 'API処理で問題が発生しました。' );
+                Log::debug( $e->getMessage() );
+                return false;
+            }
+        }
         catch (\Exception $e) 
         {
             Log::debug( 'API処理で問題が発生しました。' );
