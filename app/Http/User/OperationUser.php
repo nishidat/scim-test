@@ -166,6 +166,9 @@ class OperationUser
         if ( isset( $data['groupId'] ) )
         {
             $users->group_id = $data['groupId'];
+            if ($data['groupId'] == 'remove') {
+                $users->group_id = null;
+            }
         } 
         if ( isset( $data['familyName'] ) )
         {

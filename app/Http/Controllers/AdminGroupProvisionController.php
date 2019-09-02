@@ -174,7 +174,7 @@ class AdminGroupProvisionController extends Controller
                     {
                         foreach ($value['value'] as $key => $value) 
                         {
-                            $update_detail['groupId'] = null;
+                            $update_detail['groupId'] = 'remove';
                             $operation_user = new OperationUser();
                             $operation_user->update( $update_detail, $value['value'] );
                         }   
