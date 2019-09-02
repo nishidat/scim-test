@@ -98,7 +98,7 @@ class AdminUserProvisionController extends Controller
     public function show( Request $request, string $tenant_id, string $scim_id )
     {
         $get_user = new GetUser();
-        $users_object = $get_user->getByScimId( $scim_id );
+        $users_object = $get_user->getByScimId( $scim_id, $tenant_id );
         if( $users_object === null ) 
         {
             return $this->scimError( 'リクエストされた scim_id（User） は、存在しません。' );
@@ -144,7 +144,7 @@ class AdminUserProvisionController extends Controller
         }
         $update_detail['tenant_id'] = $tenant_id;
         $get_user = new GetUser();
-        $users_object = $get_user->getByScimId( $scim_id );
+        $users_object = $get_user->getByScimId( $scim_id, $tenant_id );
         if( $users_object === null ) 
         {
             return $this->scimError( 'リクエストされた scim_id（User） は、存在しません。' );

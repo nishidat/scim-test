@@ -104,7 +104,7 @@ class OperationUser
         
         if ( !empty( $scim_id ) )
         {
-            $users = $get_user->getByScimId( $scim_id );
+            $users = $get_user->getByScimId( $scim_id, $data['tenant_id'] );
         }
         else
         {
@@ -204,8 +204,9 @@ class OperationUser
     public function deleteUserByScimId( string $scim_id, string $tenant_id ): bool
     {
         $return = true;
-
-        $users = User::where( 'scim_id', $scim_id )->first();
+        
+        $get_user = new GetUser();
+        $users = $get_user->getByScimId( $scim_id, $tenant_id );
         if ( $users->exist_externaldb != "false" ) 
         {
             $api_client = new ApiClient();
@@ -214,7 +215,7 @@ class OperationUser
                 return false;
             }
         }
-        if ( User::where( 'scim_id', $scim_id )->delete() <= 0 ) 
+        if ( User::where( 'scim_id', $scim_id )->where( 'tenant_id', $tenant_id )->delete() <= 0 ) 
         {
             return false;
         }

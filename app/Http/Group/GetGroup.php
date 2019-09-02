@@ -13,9 +13,9 @@ class GetGroup
     * 
     * @return Group|null
     */
-    public function getByGroupName( string $group_name ): ?Group
+    public function getByGroupName( string $group_name, string $tenant_id ): ?Group
     {
-        return Group::where( 'group_name', $group_name )->first();
+        return Group::where( 'group_name', $group_name )->where( 'tenant_id', $tenant_id )->first();
     }
     
     /**
@@ -24,8 +24,8 @@ class GetGroup
     * 
     * @return Group|null
     */
-    public function getByScimId( string $scim_id ): ?Group
+    public function getByScimId( string $scim_id, string $tenant_id ): ?Group
     {
-        return Group::where( 'scim_id', $scim_id )->first();
+        return Group::where( 'scim_id', $scim_id )->where( 'tenant_id', $tenant_id )->first();
     }
 }

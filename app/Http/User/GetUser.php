@@ -24,7 +24,7 @@ class GetUser
     * 
     * @return User|null
     */
-    public function getByScimId( string $scim_id ): ?User
+    public function getByScimId( string $scim_id, string $tenant_id ): ?User
     {
         return User::where( 'scim_id', $scim_id )->first();
     }

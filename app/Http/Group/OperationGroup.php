@@ -14,7 +14,7 @@ class OperationGroup
     * 
     * @return Group    $groups       [groupsテーブルオブジェクト]
     */
-    public function create( array $data ): Group
+    public function create( array $data, string $tenant_id ): Group
     {
         Log::debug( 'グループ情報登録内容' );
         Log::debug( $data );
@@ -22,6 +22,7 @@ class OperationGroup
         $groups = Group::create
         (
             [
+                'tenant_id' => $tenant_id,
                 'scim_id' => $scim_id,
                 'external_id' => $data['externalId'],
                 'group_name' => $data['displayName'],
@@ -48,11 +49,11 @@ class OperationGroup
         
         if ( !empty( $scim_id ) )
         {
-            $groups_object = $get_group->getByScimId( $scim_id );
+            $groups_object = $get_group->getByScimId( $scim_id, $data['tenant_id'] );
         }
         else
         {
-            $groups_object = $get_group->getByGroupName( $data['displayName'] );
+            $groups_object = $get_group->getByGroupName( $data['displayName'], $data['tenant_id'] );
         }
         if ( isset( $data['displayName'] ) )
         {
@@ -70,12 +71,12 @@ class OperationGroup
     * 
     * @return boolean
     */
-    public function deleteGroupByScimId( string $scim_id ): boolean
+    public function deleteGroupByScimId( string $scim_id, string $tenant_id ): boolean
     {
-        $return = false;
-        if ( Group::where( 'scim_id', $scim_id )->delete() > 0 ) 
+        $return = true;
+        if ( Group::where( 'scim_id', $scim_id )->where( 'tenant_id', $tenant_id )->delete() <= 0 ) 
         {
-            $return = true;
+            $return = false;
         }
         
         return $return;

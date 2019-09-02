@@ -19,7 +19,7 @@ class AdminGroupProvisionController extends Controller
     * 
     * @return JsonResponse
     */
-    public function index( Request $request )
+    public function index( Request $request, string $tenant_id )
     {
         if ( !$request->filled( 'filter' ) ) 
         {
@@ -34,7 +34,7 @@ class AdminGroupProvisionController extends Controller
         $group_name = str_replace( '"', '', $matches[1] );
         
         $get_group = new GetGroup();
-        $groups_object = $get_group->getByGroupName( $group_name );
+        $groups_object = $get_group->getByGroupName( $group_name, $tenant_id );
         if( $groups_object === null )
         {
             $res_data = $this->createGetReturnData();
@@ -55,28 +55,32 @@ class AdminGroupProvisionController extends Controller
     * 
     * @return JsonResponse
     */
-    public function store( Request $request )
+    public function store( Request $request, string $tenant_id )
     {
         $data = $request->all();
         if ( !isset( $data['displayName'] ) ) 
         {
             return $this->scimError( 'displayName がリクエストされていません。' );
         }
-        
+        $data['tenant_id'] = $tenant_id;
         $get_group = new GetGroup();
         $operation_group = new OperationGroup();
-        $groups_object = $get_group->getByGroupName( $data['displayName'] );
+        $groups_object = $get_group->getByGroupName( $data['displayName'], $tenant_id );
         if( $groups_object === null ) 
         {
-            $groups_new_object = $operation_group->create( $data );
+            $groups_new_object = $operation_group->create( $data, $tenant_id );
+            if ( $groups_new_object === null ) 
+            {
+                return $this->scimError( 'グループの作成に失敗しました。' );
+            }
         }
         else
         {
-            $groups_new_object = $operation_group->update( $data );
+            $groups_new_object = $groups_object;
         }
         
         return response()
-            ->json( $this->createReturnData( $groups_new_object ), Response::HTTP_CREATED )
+            ->json( $this->createReturnData( $groups_new_object, $tenant_id ), Response::HTTP_CREATED )
             ->header( 'Content-Type', 'application/scim+json' );
     }
     
@@ -86,17 +90,17 @@ class AdminGroupProvisionController extends Controller
     * 
     * @return JsonResponse
     */
-    public function show( Request $request, string $scim_id )
+    public function show( Request $request, string $tenant_id, string $scim_id )
     {
         $get_group = new GetGroup();
-        $groups_object = $get_group->getByScimId( $scim_id );
+        $groups_object = $get_group->getByScimId( $scim_id, $tenant_id );
         if( $groups_object === null ) 
         {
             return $this->scimError( 'リクエストされた scim_id（Group） は、存在しません。' );
         }
         
         return response()
-            ->json( $this->createReturnData( $groups_object ), Response::HTTP_OK )
+            ->json( $this->createReturnData( $groups_object, $tenant_id ), Response::HTTP_OK )
             ->header( 'Content-Type', 'application/scim+json' );
     }
     
@@ -106,10 +110,10 @@ class AdminGroupProvisionController extends Controller
     * 
     * @return JsonResponse
     */
-    public function delete( Request $request, string $scim_id )
+    public function delete( Request $request, string $tenant_id, string $scim_id )
     {
         $operation_group = new OperationGroup();
-        if ( !$operation_group->deleteUserByScimId( $scim_id ) )
+        if ( !$operation_group->deleteGroupByScimId( $scim_id, $tenant_id ) )
         {
             return $this->scimError( 'リクエストされた scim_id（Group） は、存在しません。' );
         }
@@ -124,7 +128,7 @@ class AdminGroupProvisionController extends Controller
     * 
     * @return JsonResponse
     */
-    public function update( Request $request, string $scim_id )
+    public function update( Request $request, string $tenant_id, string $scim_id )
     {
         $data = $request->all();
         $update_detail = array();
@@ -132,9 +136,9 @@ class AdminGroupProvisionController extends Controller
         {
             return $this->scimError( 'Operations がリクエストされていません。' );
         }
-        
+        $update_detail['tenant_id'] = $tenant_id;
         $get_group = new GetGroup();
-        $groups_object = $get_group->getByScimId( $scim_id );
+        $groups_object = $get_group->getByScimId( $scim_id, $tenant_id );
         if( $groups_object === null ) 
         {
             return $this->scimError( 'リクエストされた scim_id（Group） は、存在しません。' );
@@ -149,7 +153,7 @@ class AdminGroupProvisionController extends Controller
                     {
                         $update_detail['displayName'] = $value['value'];
                         $operation_group = new OperationGroup();
-                        $operation_group->update( $data, $scim_id );
+                        $operation_group->update( $update_detail, $scim_id );
                     }
                     break;
                     
@@ -157,8 +161,9 @@ class AdminGroupProvisionController extends Controller
                     if( strpos( $value['path'], 'members' ) !== false )
                     {
                         $update_detail['groupId'] = $groups_object->id;
+                        $update_detail['userName'] = $value['value'];
                         $operation_user = new OperationUser();
-                        $operation_user->update( $update_detail, $scim_id );
+                        $operation_user->update( $update_detail );
                     }
                     break;
                     
@@ -166,8 +171,9 @@ class AdminGroupProvisionController extends Controller
                     if( strpos( $value['path'], 'members' ) !== false )
                     {
                         $update_detail['groupId'] = null;
+                        $update_detail['userName'] = $value['value'];
                         $operation_user = new OperationUser();
-                        $operation_user->update( $update_detail, $scim_id );
+                        $operation_user->update( $update_detail );
                     }
                     break;
                 
@@ -235,9 +241,9 @@ class AdminGroupProvisionController extends Controller
     *
     * @return array $return
     */
-    private function createReturnData( Group $groups ): array
+    private function createReturnData( Group $groups, string $tenant_id ): array
     {
-        $location = getenv( 'LOCATION_URL' ) . '/' . $tenant_id . '/Groups/' . $users->scim_id;
+        $location = getenv( 'LOCATION_URL' ) . '/' . $tenant_id . '/Groups/' . $groups->scim_id;
         $return = 
         [
             'schemas' => ['urn:ietf:params:scim:schemas:core:2.0:Group'],

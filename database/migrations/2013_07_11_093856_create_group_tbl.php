@@ -15,8 +15,9 @@ class CreateGroupTbl extends Migration
     {
         Schema::create('groups', function (Blueprint $table) {
             $table->increments('id');
+            $table->string('tenant_id'); // テナントID
             $table->string('scim_id');
-            $table->string('external_id')->unique();
+            $table->string('external_id');
             $table->string('group_name');
             $table->timestamps();
             $table->softDeletes();
