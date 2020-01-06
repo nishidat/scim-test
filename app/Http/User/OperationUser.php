@@ -134,11 +134,11 @@ class OperationUser
                 }
                 else
                 {
-                    $api_client = new ApiClient();
-                    if ( $api_client->deleteUser( $users ) === false ) 
-                    {
-                        return null;
-                    }
+                    // $api_client = new ApiClient();
+                    // if ( $api_client->deleteUser( $users ) === false ) 
+                    // {
+                    //     return null;
+                    // }
                     $delete_api_flag = true;
                 }
             }
@@ -212,11 +212,11 @@ class OperationUser
         $users = $get_user->getByScimId( $scim_id, $tenant_id );
         if ( $users->exist_externaldb != "false" ) 
         {
-            $api_client = new ApiClient();
-            if ( $api_client->deleteUser( $users ) === false ) 
-            {
-                return false;
-            }
+            // $api_client = new ApiClient();
+            // if ( $api_client->deleteUser( $users ) === false ) 
+            // {
+            //     return false;
+            // }
         }
         if ( User::where( 'scim_id', $scim_id )->where( 'tenant_id', $tenant_id )->delete() <= 0 ) 
         {
