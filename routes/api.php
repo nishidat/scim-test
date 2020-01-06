@@ -14,7 +14,7 @@ use Illuminate\Http\Request;
 */
 
 Route::prefix('scim/v2')
-->middleware('oauthcheck','requestlog')
+->middleware('requestlog')
 ->group(function (\Illuminate\Routing\Router $router) {
     // Users
     $router->get('{tenant_id}/Users', 'AdminUserProvisionController@index')
